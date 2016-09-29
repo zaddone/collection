@@ -105,24 +105,24 @@ func (self *Clu) Clear() {
 	self.CountsY = [3]float64{0,0,0}
 	self.Lock = true
 }
-func (self Clu) FindSortVal(v *tmpdata.Val) (vs []int) {
+func (self Clu) FindSortList(v *tmpdata.Val) (dis []*Distance) {
 	L := len(self.RawPatterns)
 	self.RawPatterns = append(self.RawPatterns,v)
-//	fmt.Println(len(self.RawPatterns))
-//	self.updateDss(v)
 	pat :=self.getScorePat()
 	tv := pat[L]
-	var dis []*Distance
 	for i,pa := range pat {
 		if i == L {
 			continue
 		}
 		d := new(Distance)
-//		d.Init(pa,tv,pa.GetD())
 		d.Init(pa,tv,i)
 		dis,_ = sortDis(dis,d)
 	}
-	vs= make([]int,L)
+	return dis
+}
+func (self Clu) FindSortVal(v *tmpdata.Val) (vs []int) {
+	dis := self.FindSortList(v)
+	vs= make([]int,len(dis))
 	for j,d := range dis {
 		vs[j] = d.i
 	}
@@ -468,25 +468,12 @@ func (self *Clu) Init(vs... *tmpdata.Val)  {
 //		panic(len(vs))
 //	}
 }
-func AppendSortVal(vs []*tmpdata.Val,v *tmpdata.Val) []*tmpdata.Val {
-	L := len(vs)
-	vs = append(vs,v)
-	for i:=L-1;i>=0;i-- {
-		if vs[i].GetH() > v.GetH() {
-			vs[i],vs[L] = vs[L],vs[i]
-			L = i
-		}else{
-			break
-		}
-	}
-	return vs
-}
 func (self *Clu) Append(v *tmpdata.Val)  {
 	if self.RawPatterns == nil {
 		self.RawPatterns = []*tmpdata.Val{v}
 //		self.Dss,self.Counts,self.CountsY = GetDss(self.RawPatterns)
 	}else{
-		self.RawPatterns = AppendSortVal(self.RawPatterns,v)
+		self.RawPatterns,_ = AppendSortVal(self.RawPatterns,v)
 //		self.updateDss(v)
 	}
 	self.Counts[v.C]++

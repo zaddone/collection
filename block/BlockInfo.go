@@ -11,13 +11,13 @@ import (
 //	"fmt"
 	"math"
 )
-type Matrix interface{
-	GetWeights() []float64
-	GetKey() []int
-//	SetCovs(val ...float64) int
-	AppendAtlias(at []*signal.Atlias) error
-
-}
+//type Matrix interface{
+//	GetWeights() []float64
+////	GetKey() []int
+////	SetCovs(val ...float64) int
+//	AppendAtlias(at []*signal.Atlias) error
+//
+//}
 type BlockInfo struct {
 
 	atlias   []*signal.Atlias
@@ -25,7 +25,8 @@ type BlockInfo struct {
 	end int
 	IsBuy  int     `json:"isbuy"`
 //	covs   *cov.CovMatrix
-	covs   Matrix
+//	covs   Matrix
+	covs   *curves.Curve
 	Sort  []int  `json:"sort"`
 	Weight  []float64 `json:"Weight"`
 	Next *BlockInfo
@@ -50,7 +51,7 @@ func (self *BlockInfo) UpdateAts(Ats []*signal.Atlias) bool {
 	}
 }
 func (self *BlockInfo) SetCovs() bool {
-	self.covs = new(curves.Curves)
+	self.covs = new(curves.Curve)
 	err := self.covs.AppendAtlias(self.atlias)
 	if err != nil {
 		return false
@@ -60,7 +61,7 @@ func (self *BlockInfo) SetCovs() bool {
 func (self *BlockInfo) Forecast(Cache *tmpcache.Cache) int {
 //	self.TestBuy = self.IsBuy
 //	return self.TestBuy
-	b,err :=Cache.Forecast(&tmpdata.Val{X:self.covs.GetWeights(),K:self.covs.GetKey(),Y:2,C:self.IsBuy})
+	b,err :=Cache.Forecast(&tmpdata.Val{X:self.covs.GetWeights(),K:[]int{0},Y:2,C:self.IsBuy,Cur:self.covs})
 	if err != nil {
 		self.TestBuy = 3
 	}else{
@@ -75,7 +76,7 @@ func (self *BlockInfo) SendData(Cache *tmpcache.Cache) int {
 		Y = self.Next.IsBuy
 //		C = 0
 	}
-	Cache.Input(&tmpdata.Val{X:self.covs.GetWeights(),K:self.covs.GetKey(),Y:Y,C:self.IsBuy})
+	Cache.Input(&tmpdata.Val{X:self.covs.GetWeights(),K:[]int{0},Y:Y,C:self.IsBuy,Cur:self.covs})
 	if self.TestBuy < 2 {
 //	if self.TestBuy < 3 {
 //	if self.TestBuy < 2 && Y < 2 {

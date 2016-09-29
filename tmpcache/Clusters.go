@@ -159,7 +159,7 @@ type tmpClusters struct {
 	Dbs [][]byte
 }
 func (self *Clusters) Init(c *Cache) {
-	self.Len =c.Len 
+	self.Len = c.Len
 	self.Ca = c
 //	self.Stop1 = make(chan bool)
 //	go self.SyncClear()

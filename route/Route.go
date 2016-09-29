@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 	"net"
-	"strconv"
-	"strings"
-	"github.com/zaddone/collection/tmpcache"
+//	"strconv"
+//	"strings"
+//	"github.com/zaddone/collection/tmpcache"
 	"encoding/json"
 )
 type Info struct {
@@ -132,10 +132,8 @@ func (self *Route) bakServer() {
 func (self *Route) BakCache() {
 	for name,last := range self.LastInfo {
 		ca:=last.Pi.tr.GetCache()
-		for k,v:= range ca.SedsMap{
-			db:=v.Getbakdb()
-			self.SaveCacheDB(filepath.Join(self.dbPath,fmt.Sprintf("%s_%d",name,k[0])),db)
-		}
+		db := ca.Sedslist.Getbakdb()
+		self.SaveCacheDB(filepath.Join(self.dbPath,name),db)
 
 	}
 
@@ -171,22 +169,23 @@ func (self *Route) ReadCacheDB() (err error){
 		if fi.IsDir() {
 			return nil
 		}
-		ns:=strings.Split(fi.Name(),"_")
-		last:=self.LastInfo[ns[0]]
+//		ns:=strings.Split(fi.Name(),"_")
+		last:=self.LastInfo[fi.Name()]
 		if last == nil {
 			return fmt.Errorf("Fount not info")
 		}
 		ca:=last.Pi.tr.GetCache()
-		k,err:=strconv.Atoi(ns[1])
-		if err != nil {
-			return err
-		}
-		sed:=ca.SedsMap[[1]int{k}]
-		if sed == nil {
-			sed = new(tmpcache.Clusters)
-			sed.Init(ca)
-			ca.SedsMap[[tmpcache.KeyLen]int{k}] = sed
-		}
+//		k,err:=strconv.Atoi(ns[1])
+//		if err != nil {
+//			return err
+//		}
+		sed:=ca.Sedslist
+//		sed:=ca.SedsMap[[1]int{k}]
+//		if sed == nil {
+//			sed = new(tmpcache.Clusters)
+//			sed.Init(ca)
+//			ca.SedsMap[[tmpcache.KeyLen]int{k}] = sed
+//		}
 		f,err := os.Open(path)
 		if err != nil {
 			return err
@@ -208,54 +207,55 @@ func (self *Route) QueryCache(name string) {
 		fmt.Println("find nil")
 		return
 	}
-	ca:=last.Pi.tr.GetCache()
-	seds := make(map[[1]int][]*tmpcache.Clu)
-	for k,v:=range ca.SedsMap {
-//		seds[k] := new(tmpMsg)
-		var count,countN int
-		var db []byte
-		seds[k],count,countN,db = v.GetCountSeds()
-		fmt.Println(k,len(v.Clu),len(seds[k]),count,countN)
-		self.SaveCacheDB(filepath.Join(self.dbPath,fmt.Sprintf("%s_%d",name,k[0])),db)
-	}
-	var key [1]int
-	var s1 string
-//	var s2 string
-	var err error
-	for {
-		fmt.Println("Wait input")
-//		fmt.Scanf("%s %s\n",&s1,&s2)
-		fmt.Scanf("%s\n",&s1)
-		if s1 == "x" {
-			self.QueryCache(name)
-			return
-		}
-		if s1 == "xx" {
-			break
-		}
-		key[0],err = strconv.Atoi(s1)
-		if err !=nil {
-			fmt.Println(err)
-			continue
-		}
-//		key[1],err = strconv.Atoi(s2)
-//		if err != nil {
+//	ca:=last.Pi.tr.GetCache()
+	return
+//	seds := make(map[[1]int][]*tmpcache.Clu)
+//	for k,v:=range ca.SedsMap {
+////		seds[k] := new(tmpMsg)
+//		var count,countN int
+//		var db []byte
+//		seds[k],count,countN,db = v.GetCountSeds()
+//		fmt.Println(k,len(v.Clu),len(seds[k]),count,countN)
+//		self.SaveCacheDB(filepath.Join(self.dbPath,fmt.Sprintf("%s_%d",name,k[0])),db)
+//	}
+//	var key [1]int
+//	var s1 string
+////	var s2 string
+//	var err error
+//	for {
+//		fmt.Println("Wait input")
+////		fmt.Scanf("%s %s\n",&s1,&s2)
+//		fmt.Scanf("%s\n",&s1)
+//		if s1 == "x" {
+//			self.QueryCache(name)
+//			return
+//		}
+//		if s1 == "xx" {
+//			break
+//		}
+//		key[0],err = strconv.Atoi(s1)
+//		if err !=nil {
 //			fmt.Println(err)
 //			continue
 //		}
-		vs :=seds[key]
-		if vs == nil {
-			fmt.Println("found not")
-			continue
-		}
-		for i,sed := range vs {
-			if sed != nil {
-//				sed.Equs()
-				fmt.Printf("%d %d %.1f %.1f\r\n",i,len(sed.RawPatterns),sed.Counts,sed.CountsY)
-			}
-		}
-//		fmt.Println(key,len(vs.Seds))
-	}
+////		key[1],err = strconv.Atoi(s2)
+////		if err != nil {
+////			fmt.Println(err)
+////			continue
+////		}
+//		vs :=seds[key]
+//		if vs == nil {
+//			fmt.Println("found not")
+//			continue
+//		}
+//		for i,sed := range vs {
+//			if sed != nil {
+////				sed.Equs()
+//				fmt.Printf("%d %d %.1f %.1f\r\n",i,len(sed.RawPatterns),sed.Counts,sed.CountsY)
+//			}
+//		}
+////		fmt.Println(key,len(vs.Seds))
+//	}
 }
 func (self *Route) appendPathInfo(pi *PathInfo) *Info{
 

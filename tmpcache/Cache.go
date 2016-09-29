@@ -7,7 +7,7 @@ import (
 	"net"
 	"time"
 //	"encoding/json"
-	"sync"
+//	"sync"
 )
 const (
 	POOL int = 100
@@ -29,7 +29,8 @@ type SedsTmp struct {
 
 type Cache struct {
 
-	SedsMap map[[KeyLen]int]*Clusters
+//	SedsMap map[[KeyLen]int]*Clusters
+	Sedslist *Clus
 	CluMap map[string]*Clu
 //	ConnPool  chan int
 //	SedsPool  chan *SedsTmp
@@ -133,26 +134,27 @@ func handleConn(conn net.Conn,sed *Clu,State chan bool,da []byte) error {
 	return nil
 
 }
-func (self *Cache) SyncServer() {
-	beart := time.Tick(time.Second)
-//	i := 0
-	for {
-		select {
-		case <- beart :
-			sy := new(sync.WaitGroup)
-			for _,clus := range self.SedsMap {
-				sy.Add(1)
-				go clus.SyncMergeServer(sy)
-			}
-			sy.Wait()
-		//	i ++
-		//	fmt.Printf("%d\r",i)
-		}
-	}
-}
+//func (self *Cache) SyncServer() {
+//	beart := time.Tick(time.Second)
+////	i := 0
+//	for {
+//		select {
+//		case <- beart :
+//			sy := new(sync.WaitGroup)
+//			for _,clus := range self.SedsMap {
+//				sy.Add(1)
+//				go clus.SyncMergeServer(sy)
+//			}
+//			sy.Wait()
+//		//	i ++
+//		//	fmt.Printf("%d\r",i)
+//		}
+//	}
+//}
 func (self *Cache)Init(listener *net.Listener) *Cache {
 
-	self.SedsMap = make(map[[KeyLen]int]*Clusters)
+//	self.SedsMap = make(map[[KeyLen]int]*Clusters)
+	self.Sedslist = new(Clus)
 	self.CluMap  = make(map[string]*Clu)
 //	self.TmpMap = make(map[[KeyLen]int][]*tmpdata.Val)
 //	self.ConnPool = make(chan int,POOL)
@@ -197,60 +199,52 @@ func GetBL(vals []*tmpdata.Val) (o,e float64) {
 	return o,e
 }
 func (self *Cache) Forecast(v *tmpdata.Val) (int,error) {
-//	return false,fmt.Errorf("is nil")
+	return 0,fmt.Errorf("is nil")
 
-	key := GetMapKey(v.K)
-	Clus :=self.SedsMap[key]
-	if Clus == nil{
-		return -1,fmt.Errorf("is nil")
-	}
-
-
-	S1,_:= Clus.GetSameSed(v)
-	if S1 == nil {
-		return -1,fmt.Errorf("is nil")
-	}
-	f := S1.Forecast(v)
-	if f == -1 {
-		return -1,fmt.Errorf("check is false")
-	}else {
-		return f,nil
-	}
-	return -1,fmt.Errorf("is err %d",f)
+//	key := GetMapKey(v.K)
+//	Clus :=self.SedsMap[key]
+//	if Clus == nil{
+//		return -1,fmt.Errorf("is nil")
+//	}
+//
+//
+//	S1,_:= Clus.GetSameSed(v)
+//	if S1 == nil {
+//		return -1,fmt.Errorf("is nil")
+//	}
+//	f := S1.Forecast(v)
+//	if f == -1 {
+//		return -1,fmt.Errorf("check is false")
+//	}else {
+//		return f,nil
+//	}
+//	return -1,fmt.Errorf("is err %d",f)
 
 }
 func (self *Cache) Input(v *tmpdata.Val) (error) {
 //	fmt.Println(v.X)
-	key := GetMapKey(v.K)
-	Clus :=self.SedsMap[key]
-	if Clus == nil{
-		Clus = new(Clusters)
-		Clus.Init(self)
-		Clus.AppendVal(v)
-		self.SedsMap[key]=Clus
-		return nil
-	}else{
-		Clus.AppendVal(v)
-	}
-
-//	for k,v := range self.SedsMap {
-//		fmt.Printf("%d %d %d\r\n",k,len(v.Tmp),len(v.Seds) )
-//	}
-//	fmt.Printf("%d %d\r",len(self.SedsMap),len(self.ConnPool) )
+	self.Sedslist.AppendVal(v,0)
 	return nil
+//	key := GetMapKey(v.K)
+//	Clus :=self.SedsMap[key]
+//	if Clus == nil{
+//		Clus = new(Clusters)
+//		Clus.Init(self)
+//		Clus.AppendVal(v)
+//		self.SedsMap[key]=Clus
+//		return nil
+//	}else{
+//		Clus.AppendVal(v)
+//	}
+//	return nil
 }
 func (self *Cache) AppendWaits(S1 *Clu) {
 	if len(S1.RawPatterns) < self.Len {
 		return
 	}
-//	key := fmt.Sprintf("%p",S1)
-//	fmt.Println(key)
-//	panic("______")
 
-	self.CluMap[fmt.Sprintf("%p",S1)] = S1
-//	self.SedsPool <- &SedsTmp{s:S1,st:st,d:d}
-//	self.SedsPool <- S1
-//	go self.GetConn(S1,S1.Start,self.ConnPool,vs)
+//	self.CluMap[fmt.Sprintf("%p",S1)] = S1
+
 }
 func (self *Cache) AppendWait(S1 *dbscan.SED,isNn bool,vs []*tmpdata.Val) {
 //	self.ConnPool <- len(self.ConnPool)

@@ -2,7 +2,7 @@ package tmpdata
 import (
 	"encoding/json"
 	"crypto/sha1"
-	"github.com/zaddone/collection/signal"
+	"github.com/zaddone/collection/curves"
 )
 
 
@@ -12,21 +12,15 @@ type Val struct {
 	Y   int
 	C   int
 	d   int
-	h   int
-	at  []*signal.Atlias
-}
-func (self *Val) SetAt(at  []*signal.Atlias) {
-	self.at = at
-}
-func (self *Val) GetAt() []*signal.Atlias {
-	return self.at
+	H   int
+	Cur  *curves.Curve
 }
 
 func (self *Val) SetH(d int){
-	self.h = d
+	self.H = d
 }
 func (self *Val) GetH() int {
-	return self.h
+	return self.H
 }
 func (self *Val) SetD(d int){
 	self.d = d

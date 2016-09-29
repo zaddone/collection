@@ -21,7 +21,8 @@ type Distance struct {
 	i  int
 }
 func (self *Distance) Init (a,b *tmpdata.Val,i int) {
-	self.dis = EucDistance(a.X,b.X)
+//	self.dis = EucDistance(a.X,b.X)
+	self.dis = b.Cur.GetErrOther(a.X)
 	self.a = a
 	self.b = b
 	self.i = i
