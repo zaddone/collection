@@ -207,7 +207,17 @@ func (self *Route) QueryCache(name string) {
 		fmt.Println("find nil")
 		return
 	}
-//	ca:=last.Pi.tr.GetCache()
+	sed:=last.Pi.tr.GetCache().Sedslist
+	kcon:=0
+	con:=0
+	for _,c := range sed.Clu {
+		L := len(c.RawPatterns)
+		con += L
+		if L >10 {
+			kcon+=L
+		}
+	}
+	fmt.Printf("%d %d %d \r\n",sed.ValCount,con,kcon)
 	return
 //	seds := make(map[[1]int][]*tmpcache.Clu)
 //	for k,v:=range ca.SedsMap {

@@ -2,6 +2,7 @@ package tmpcache
 import (
 	"github.com/zaddone/collection/tmpdata"
 	"math"
+//	"fmt"
 )
 
 func EucDistance(a []float64,b []float64) float64 {
@@ -22,7 +23,12 @@ type Distance struct {
 }
 func (self *Distance) Init (a,b *tmpdata.Val,i int) {
 //	self.dis = EucDistance(a.X,b.X)
-	self.dis = b.Cur.GetErrOther(a.X)
+
+	self.dis = (b.Cur.GetErrOther(a.X)+a.Cur.GetErrOther(b.X))*0.5
+
+//	self.dis = b.Cur.GetErrOther(a.X)
+//	dis1 :=	a.Cur.GetErrOther(b.X)
+//	fmt.Println(self.dis,dis1)
 	self.a = a
 	self.b = b
 	self.i = i

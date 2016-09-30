@@ -8,7 +8,7 @@ import (
 )
 const (
 //	ORDER float64 = 5
-	Errs  float64 = 0.05
+	Errs  float64 = 0.01
 )
 type Curve struct {
 	X [][]float64

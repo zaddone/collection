@@ -2,7 +2,7 @@ package tmpcache
 import (
 	"github.com/zaddone/collection/tmpdata"
 	"github.com/zaddone/collection/dbscan"
-	"github.com/zaddone/collection/common"
+//	"github.com/zaddone/collection/common"
 	"fmt"
 	"net"
 	"time"
@@ -21,20 +21,20 @@ func  FindSame(list []*dbscan.SED,a *dbscan.SED) bool {
 	}
 	return false
 }
-type SedsTmp struct {
-	s *Clu
-	st chan bool
-	d []byte
-}
+//type SedsTmp struct {
+//	s *Clu
+//	st chan bool
+//	d []byte
+//}
 
 type Cache struct {
 
 //	SedsMap map[[KeyLen]int]*Clusters
 	Sedslist *Clus
-	CluMap map[string]*Clu
+//	CluMap map[string]*Clu
 //	ConnPool  chan int
 //	SedsPool  chan *SedsTmp
-	SedsPool  chan *Clu
+//	SedsPool  chan *Clu
 
 	Len int
 //	Lis *net.Listener
@@ -70,70 +70,70 @@ func (self *Cache) getConn(Lis *net.Listener) net.Conn {
 	return conn
 
 }
-func (self *Cache) Conns(Lis *net.Listener) {
-//	i:=0
-	for {
-		for k,sed:= range self.CluMap {
-			d := sed.GetNnTrData()
-			if d != nil {
-				conn := self.getConn(Lis)
-				go  handleConn( conn,sed,sed.GetStart(),d)
-			}
-			delete(self.CluMap,k)
-		}
-		time.Sleep(time.Second)
-	}
-}
-func handleConn(conn net.Conn,sed *Clu,State chan bool,da []byte) error {
-	defer conn.Close()
-	var begindata [common.SocketLen]byte
-	_,err:=conn.Read(begindata[0:])
-	if err != nil {
-		return err
-	}
-	if begindata[0] != 1 {
-		return fmt.Errorf("head err")
-	}
-	err = common.ConnWrite(conn,da)
-	if err != nil {
-		return err
-	}
-	for {
-		select {
-			case <-State :
-//				fmt.Println("kill")
-				_,err = conn.Write([]byte{11})
-				if err != nil {
-					return err
-				}
-				break
-			default :
-
-				_,err = conn.Write([]byte{0})
-				if err != nil {
-					return err
-				}
-				_,err = conn.Read(begindata[0:])
-				if err != nil {
-					return err
-				}
-				if begindata[0] == 1 {
-					_,err = conn.Write([]byte{1})
-					if err != nil {
-						return err
-					}
-					status,err :=common.ConnRead(conn)
-					if err != nil {
-						return err
-					}
-					sed.InitNn(status)
-					return nil
-				}
-		}
-	}
-	return nil
-
-}
+//func (self *Cache) Conns(Lis *net.Listener) {
+////	i:=0
+//	for {
+//		for k,sed:= range self.CluMap {
+//			d := sed.GetNnTrData()
+//			if d != nil {
+//				conn := self.getConn(Lis)
+//				go  handleConn( conn,sed,sed.GetStart(),d)
+//			}
+//			delete(self.CluMap,k)
+//		}
+//		time.Sleep(time.Second)
+//	}
+//}
+//func handleConn(conn net.Conn,sed *Clu,State chan bool,da []byte) error {
+//	defer conn.Close()
+//	var begindata [common.SocketLen]byte
+//	_,err:=conn.Read(begindata[0:])
+//	if err != nil {
+//		return err
+//	}
+//	if begindata[0] != 1 {
+//		return fmt.Errorf("head err")
+//	}
+//	err = common.ConnWrite(conn,da)
+//	if err != nil {
+//		return err
+//	}
+//	for {
+//		select {
+//			case <-State :
+////				fmt.Println("kill")
+//				_,err = conn.Write([]byte{11})
+//				if err != nil {
+//					return err
+//				}
+//				break
+//			default :
+//
+//				_,err = conn.Write([]byte{0})
+//				if err != nil {
+//					return err
+//				}
+//				_,err = conn.Read(begindata[0:])
+//				if err != nil {
+//					return err
+//				}
+//				if begindata[0] == 1 {
+//					_,err = conn.Write([]byte{1})
+//					if err != nil {
+//						return err
+//					}
+//					status,err :=common.ConnRead(conn)
+//					if err != nil {
+//						return err
+//					}
+//					sed.InitNn(status)
+//					return nil
+//				}
+//		}
+//	}
+//	return nil
+//
+//}
 //func (self *Cache) SyncServer() {
 //	beart := time.Tick(time.Second)
 ////	i := 0
@@ -155,16 +155,16 @@ func (self *Cache)Init(listener *net.Listener) *Cache {
 
 //	self.SedsMap = make(map[[KeyLen]int]*Clusters)
 	self.Sedslist = new(Clus)
-	self.CluMap  = make(map[string]*Clu)
+//	self.CluMap  = make(map[string]*Clu)
 //	self.TmpMap = make(map[[KeyLen]int][]*tmpdata.Val)
 //	self.ConnPool = make(chan int,POOL)
-	self.SedsPool = make(chan *Clu,POOL)
+//	self.SedsPool = make(chan *Clu,POOL)
 	self.Len = 10
 //	self.Lis = listener
 //	for i:=0;i<10;i++{
 
 //	go self.SyncGetConn()
-	go self.Conns(listener)
+//	go self.Conns(listener)
 
 //	}
 //	go self.SyncServer()
@@ -172,7 +172,7 @@ func (self *Cache)Init(listener *net.Listener) *Cache {
 
 }
 func (self *Cache) ShowInfo() string {
-	return fmt.Sprintf("%d %.5f %.1f %.1f",len(self.SedsPool),self.er/self.same,self.er,self.same)
+	return fmt.Sprintf("%.5f %.1f %.1f",self.er/self.same,self.er,self.same)
 }
 func GetMapKey(k []int) (key [KeyLen]int) {
 	if KeyLen == 1 {
@@ -223,7 +223,7 @@ func (self *Cache) Forecast(v *tmpdata.Val) (int,error) {
 }
 func (self *Cache) Input(v *tmpdata.Val) (error) {
 //	fmt.Println(v.X)
-	self.Sedslist.AppendVal(v,0)
+	self.Sedslist.AppendVal(v,1)
 	return nil
 //	key := GetMapKey(v.K)
 //	Clus :=self.SedsMap[key]
@@ -238,14 +238,14 @@ func (self *Cache) Input(v *tmpdata.Val) (error) {
 //	}
 //	return nil
 }
-func (self *Cache) AppendWaits(S1 *Clu) {
-	if len(S1.RawPatterns) < self.Len {
-		return
-	}
-
-//	self.CluMap[fmt.Sprintf("%p",S1)] = S1
-
-}
+//func (self *Cache) AppendWaits(S1 *Clu) {
+//	if len(S1.RawPatterns) < self.Len {
+//		return
+//	}
+//
+////	self.CluMap[fmt.Sprintf("%p",S1)] = S1
+//
+//}
 func (self *Cache) AppendWait(S1 *dbscan.SED,isNn bool,vs []*tmpdata.Val) {
 //	self.ConnPool <- len(self.ConnPool)
 //	fmt.Println("conn",len(self.ConnPool))

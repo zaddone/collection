@@ -2,11 +2,11 @@ package tmpcache
 import (
 	"github.com/zaddone/collection/tmpdata"
 	"encoding/json"
-	"fmt"
+//	"fmt"
 )
 const (
 	LongLen int = 100
-	LongIsBack int = 2
+	LongIsBack int = 1
 )
 type Clus struct {
 	Clu []*Cl
@@ -42,9 +42,9 @@ func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
 //	tmpClu := new(Cl)
 //	tmpClu.Init(tmps...)
 	tmpClu := &Cl{RawPatterns:tmps}
-	vs := tmpClu.FindSortVal(v)
+	dis := tmpClu.FindSortVal(v)
 
-	Long := len(vs)
+	Long := len(dis)
 	if Long > LongLen {
 		Long = LongLen
 	}
@@ -53,13 +53,14 @@ func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
 	var tmpli [][]int = make([][]int,Long)
 	var minT int
 	var ls int
-	for j,i := range vs[:Long] {
-		cl,L:=clus[i].TmpAppendVal(v)
+	for j,d := range dis[:Long] {
+		cl,L:=clus[d.i].TmpAppendVal(v)
+	//	fmt.Println(cl.DisSort,clus[i].DisSort)
 		tmpc[j] = cl
 		tmpli[j] = L
 		tmpDisSort,ls = sortDis(tmpDisSort,cl.DisSort[len(cl.DisSort)-1][0])
-		fmt.Println(j,ls)
 		if ls == 0 {
+//			fmt.Println(j,ls)
 			minT = j
 		}
 	}
@@ -71,12 +72,16 @@ func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
 	}else{
 		cp :=tmpc[minT]
 		cp.UpdateCore()
-		clus[vs[minT]] = cp
+		clus[dis[minT].i].CopyCl(cp)
+	//	fmt.Println(minT,Long,cp,"-------------")
+	//	panic(0)
 	}
+//	return
 	if isBack > LongIsBack {
 		return
 	}
-	for j,i := range vs[:Long] {
+	var vals []*tmpdata.Val
+	for j,d := range dis[:Long] {
 		if j == minT {
 			continue
 		}
@@ -84,13 +89,17 @@ func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
 		if ls == nil {
 			continue
 		}
-		cp := clus[i]
+		cp := clus[d.i]
 		for _,_i := range ls {
-			newBack := isBack+1
-			self.AppendVal(cp.RawPatterns[_i],newBack)
+//			val:=cp.RawPatterns[_i]
+			vals = append(vals, cp.RawPatterns[_i])
 			cp.DeleteVal(_i)
 		}
 		cp.UpdateCore()
+	}
+//	fmt.Println(len(vals),isBack)
+	for _,val := range vals {
+		self.AppendVal(val,isBack+1)
 	}
 
 }

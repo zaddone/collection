@@ -228,7 +228,7 @@ func (self *Feature) FindBak(la *BlockInfo) (begin int) {
 		b.SendData(self.Cache)
 	}
 	self.isOk2 += float64(begin)
-	fmt.Printf("%.1f %.5f %d\r",self.isOk,self.isOk1/self.isOk2,len(self.Cache.CluMap))
+	fmt.Printf("%.1f %.5f\r",self.isOk,self.isOk1/self.isOk2)
 	if begin >= len(self.lastBak) {
 		self.lastBak = nil
 	}else{
