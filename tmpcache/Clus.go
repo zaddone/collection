@@ -2,11 +2,12 @@ package tmpcache
 import (
 	"github.com/zaddone/collection/tmpdata"
 	"encoding/json"
+	"sync"
 //	"fmt"
 )
 const (
-	LongLen int = 100
-	LongIsBack int = 1
+	LongLen int = 10
+	LongIsBack int = 2
 )
 type Clus struct {
 	Clu []*Cl
@@ -27,8 +28,7 @@ func (self *Clus) Getbakdb() (db []byte) {
 func (self *Clus) LoadData(db []byte) error {
 	return json.Unmarshal(db,self)
 }
-func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
-
+func (self *Clus) Append(v *tmpdata.Val)  {
 	v.SetH(self.ValCount)
 	self.ValCount++
 	if len(self.Clu) < 2 {
@@ -37,13 +37,14 @@ func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
 		self.Clu = append(self.Clu,clu)
 		return
 	}
-	clus,tmps := self.getTmpVal(nil)
+	self.AppendVal(v,1)
+}
+func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
 
-//	tmpClu := new(Cl)
-//	tmpClu.Init(tmps...)
+	clus,tmps := self.getTmpVal()
+
 	tmpClu := &Cl{RawPatterns:tmps}
 	dis := tmpClu.FindSortVal(v)
-
 	Long := len(dis)
 	if Long > LongLen {
 		Long = LongLen
@@ -51,31 +52,50 @@ func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
 	var tmpDisSort []*Distance
 	var tmpc []*Cl = make([]*Cl,Long)
 	var tmpli [][]int = make([][]int,Long)
-	var minT int
+	var minT int = -1
 	var ls int
 	for j,d := range dis[:Long] {
 		cl,L:=clus[d.i].TmpAppendVal(v)
-	//	fmt.Println(cl.DisSort,clus[i].DisSort)
 		tmpc[j] = cl
 		tmpli[j] = L
-		tmpDisSort,ls = sortDis(tmpDisSort,cl.DisSort[len(cl.DisSort)-1][0])
+		md :=cl.DisSort[len(cl.DisSort)-1][0]
+
+//		md.i = j
+//		tmpDisSort,_ = sortDis(tmpDisSort,md)
+
+		tmpDisSort,ls = sortDis(tmpDisSort,md)
 		if ls == 0 {
-//			fmt.Println(j,ls)
 			minT = j
 		}
 	}
-	if tmpDisSort[0].a.C != v.C {
+
+	isUp := false
+	for _,td := range tmpDisSort{
+		if td.a.C == v.C {
+			minT = td.i
+			cp :=tmpc[minT]
+			cp.UpdateCore()
+			clus[dis[minT].i].CopyCl(cp)
+			isUp = true
+			break
+		}
+	}
+	if !isUp {
 		newClu := new(Cl)
 		newClu.Append(v)
 		self.Clu = append(self.Clu,newClu)
-		minT = -1
-	}else{
-		cp :=tmpc[minT]
-		cp.UpdateCore()
-		clus[dis[minT].i].CopyCl(cp)
-	//	fmt.Println(minT,Long,cp,"-------------")
-	//	panic(0)
 	}
+
+//	if tmpDisSort[0].a.C != v.C {
+//		newClu := new(Cl)
+//		newClu.Append(v)
+//		self.Clu = append(self.Clu,newClu)
+//		minT = -1
+//	}else{
+//		cp :=tmpc[minT]
+//		cp.UpdateCore()
+//		clus[dis[minT].i].CopyCl(cp)
+//	}
 //	return
 	if isBack > LongIsBack {
 		return
@@ -90,40 +110,48 @@ func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
 			continue
 		}
 		cp := clus[d.i]
-		for _,_i := range ls {
-//			val:=cp.RawPatterns[_i]
-			vals = append(vals, cp.RawPatterns[_i])
-			cp.DeleteVal(_i)
+//		fmt.Println(ls,len(cp.RawPatterns))
+		if len(cp.RawPatterns)-len(ls) < 2 {
+			vals = append(vals,cp.RawPatterns...)
+			cp.RawPatterns = nil
+		}else{
+			for _,_i := range ls {
+//				val:=cp.RawPatterns[_i]
+				vals = append(vals, cp.RawPatterns[_i])
+				cp.DeleteVal(_i)
+			}
+			cp.UpdateCore()
 		}
-		cp.UpdateCore()
 	}
 //	fmt.Println(len(vals),isBack)
-	for _,val := range vals {
-		self.AppendVal(val,isBack+1)
+	if vals == nil {
+		return
 	}
+	walk := new(sync.WaitGroup)
+	walk.Add(1)
+	go self.syncAppendVal(vals,isBack,walk)
+	walk.Wait()
 
 }
-func (self *Clus) getTmpVal(c *Cl) (tmpc []*Cl,tmp []*tmpdata.Val) {
+func (self *Clus) syncAppendVal(vals []*tmpdata.Val,isBack int,walk *sync.WaitGroup) {
+//	fmt.Println("count:",len(vals),"____________")
+	for _,val := range vals {
+//		fmt.Println(i)
+		self.AppendVal(val,isBack+1)
+	}
+	walk.Done()
+}
+func (self *Clus) getTmpVal() (tmpc []*Cl,tmp []*tmpdata.Val) {
 	L := len(self.Clu)
 	for i := L -1;i>=0;i--{
 		_c := self.Clu[i]
-		le :=len(_c.RawPatterns)
-		if le == 0 {
+//		le := len(_c.RawPatterns)
+		if _c.RawPatterns == nil {
 			self.Clu = append(self.Clu[:i],self.Clu[i+1:]...)
-			continue
-		}
-		if _c == c {
 			continue
 		}
 		tmpc = append(tmpc,_c)
 		tmp = append(tmp,_c.RawPatterns[_c.Core])
-//		tmp = append(tmp,_c.RawPatterns[0])
-//		if _c.Core == nil {
-//			tmp = append(tmp,_c.RawPatterns[le-1])
-//		}else{
-//			tmp = append(tmp,_c.RawPatterns[_c.Core])
-//			//tmp = append(tmp,_c.Core)
-//		}
 	}
 	return tmpc,tmp
 }

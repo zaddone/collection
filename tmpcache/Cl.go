@@ -31,23 +31,22 @@ func (self Cl) TmpAppendVal(v *tmpdata.Val) (*Cl, []int) {
 func (self *Cl) DeleteVal(i int) {
 //	v := self.RawPatterns[i]
 	vd := self.DisSort[i]
-	for t,ds := range self.DisSort {
-		if t == i {
-			continue
-		}
-J:
+	self.DisSort = append(self.DisSort[:i],self.DisSort[i+1 :]...)
+	self.RawPatterns = append(self.RawPatterns[:i],self.RawPatterns[i+1 :]...)
+	return
+	for _,ds := range self.DisSort {
+		J:
 		for j,d := range ds {
 			for _j,_d := range vd {
-				if _d == d {
-					ds = append(ds[:j],ds[j+1:]...)
-					vd = append(vd[:_j],vd[_j+1:]...)
-					break J
+				if _d != d {
+					continue
 				}
+				ds = append(ds[:j],ds[j+1:]...)
+				vd = append(vd[:_j],vd[_j+1:]...)
+				break J
 			}
 		}
 	}
-	self.RawPatterns = append(self.RawPatterns[:i],self.RawPatterns[i+1 :]...)
-	self.DisSort = append(self.DisSort[:i],self.DisSort[i+1 :]...)
 //	self.UpdateCore()
 }
 func (self *Cl) OutputCheck(L []int) ([]int) {
@@ -59,10 +58,9 @@ func (self *Cl) OutputCheck(L []int) ([]int) {
 	if Lc > Le {
 		return nil
 	}
-	lastDis :=make([]*Distance, Le)
-	copy(lastDis,self.DisSort[Le])
-//	fmt.Println(lastDis)
+	lastDis := self.DisSort[Le]
 	core := self.RawPatterns[self.Core]
+	last := self.RawPatterns[Le]
 	var tmpint []int
 	AppendSort := func(li []int,a int) []int {
 		L := len(li)
@@ -83,8 +81,16 @@ func (self *Cl) OutputCheck(L []int) ([]int) {
 		if v1 == core {
 			v1 = d1.b
 		}
+//		fmt.Printf("%p %p %p \r\n",d1,v1,core)
 		for i,d2 := range lastDis {
-			if d2.a == v1 {
+			v2 := d2.a
+			if v2 == last {
+				v2 = d2.b
+			}
+			if v2 == v1 {
+
+//			if d2.a == v1 {
+			//	fmt.Printf("%p %p %p %p\r\n",d1,d2,v1,v2)
 				if d1.dis > d2.dis {
 					tmpint = AppendSort(tmpint,d2.i)
 					lastDis = append(lastDis[:i],lastDis[i+1 :]...)
@@ -114,14 +120,14 @@ func (self *Cl) FindSortVal(v *tmpdata.Val) (dis []*Distance) {
 		dis,_ = sortDis(dis,d)
 	}
 	return dis
-//	vs= make([]int,len(dis))
-//	for j,d := range dis {
-//		vs[j] = d.i
-//	}
-//	return vs
 
 }
 func (self *Cl) Append(v *tmpdata.Val) (L int)  {
+//	for _,val := range self.RawPatterns {
+//		if val == v {
+//			panic(0)
+//		}
+//	}
 	if self.RawPatterns == nil {
 		self.RawPatterns = []*tmpdata.Val{v}
 		self.DisSort = make([][]*Distance,1)

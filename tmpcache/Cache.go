@@ -223,7 +223,7 @@ func (self *Cache) Forecast(v *tmpdata.Val) (int,error) {
 }
 func (self *Cache) Input(v *tmpdata.Val) (error) {
 //	fmt.Println(v.X)
-	self.Sedslist.AppendVal(v,1)
+	self.Sedslist.Append(v)
 	return nil
 //	key := GetMapKey(v.K)
 //	Clus :=self.SedsMap[key]

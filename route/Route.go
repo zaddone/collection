@@ -213,7 +213,7 @@ func (self *Route) QueryCache(name string) {
 	for _,c := range sed.Clu {
 		L := len(c.RawPatterns)
 		con += L
-		if L >10 {
+		if L > 5 {
 			kcon+=L
 		}
 	}
