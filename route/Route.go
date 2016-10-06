@@ -8,7 +8,7 @@ import (
 	"net"
 //	"strconv"
 //	"strings"
-//	"github.com/zaddone/collection/tmpcache"
+	"github.com/zaddone/collection/tmpcache"
 	"encoding/json"
 )
 type Info struct {
@@ -210,14 +210,38 @@ func (self *Route) QueryCache(name string) {
 	sed:=last.Pi.tr.GetCache().Sedslist
 	kcon:=0
 	con:=0
+	sedLen:=10
+	seds := make([]*tmpcache.Cl,sedLen)
 	for _,c := range sed.Clu {
 		L := len(c.RawPatterns)
 		con += L
-		if L > 5 {
+		if L > 15 {
+			if sedLen > 0 {
+				sedLen -- 
+				seds[sedLen]=c
+			}
 			kcon+=L
 		}
 	}
-	fmt.Printf("%d %d %d \r\n",sed.ValCount,con,kcon)
+	fmt.Printf("%d %d %d %d\r\n",sed.ValCount,con,kcon,len(sed.Clu))
+	var s1 string
+	for {
+		fmt.Println("Wait input")
+//		fmt.Scanf("%s %s\n",&s1,&s2)
+		fmt.Scanf("%s\n",&s1)
+		if s1 == "x" {
+			self.QueryCache(name)
+			return
+		}
+		if s1 == "xx" {
+			break
+		}
+		for _,cl := range seds {
+			if cl != nil {
+				fmt.Println(cl.CountY,cl.GetPG())
+			}
+		}
+	}
 	return
 //	seds := make(map[[1]int][]*tmpcache.Clu)
 //	for k,v:=range ca.SedsMap {

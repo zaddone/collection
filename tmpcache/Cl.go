@@ -1,52 +1,151 @@
 package tmpcache
 import (
 	"github.com/zaddone/collection/tmpdata"
-//	"fmt"
+	"fmt"
 )
 type Cl struct {
 	RawPatterns []*tmpdata.Val
 	DisSort  [][]*Distance
+	CountY   [3]int
+	Sum   float64
+	DisCount float64
 	Core   int
 }
-func (self *Cl) CopyCl(c *Cl) {
+func (self *Cl) Copy(c *Cl) {
 	self.RawPatterns = c.RawPatterns
 	self.DisSort = c.DisSort
 	self.Core = c.Core
+	self.CountY = c.CountY
+}
+func (self *Cl) Clear(){
+	self.RawPatterns = nil
+	self.DisSort = nil
+	self.Core = -1
+	self.CountY = [3]int{0,0,0}
 }
 func (self Cl) TmpAppendVal(v *tmpdata.Val) (*Cl, []int) {
 	sortlist:=make([]int,len(self.RawPatterns))
-//	self.RawPatterns = append(self.RawPatterns,v)
 	var dis []*Distance
-	for i,pa := range self.RawPatterns {
-//		pa.SetD(i)
+	disSort:= make([][]*Distance,len(self.DisSort))
+	RawPatterns:= make([]*tmpdata.Val,len(self.RawPatterns))
+	copy(RawPatterns,self.RawPatterns)
+	copy(disSort,self.DisSort)
+//	fmt.Printf("append %p\r\n",v)
+	for i,pa := range RawPatterns {
 		d := new(Distance)
 		d.Init(pa,v,i)
-		self.DisSort[i],sortlist[i] = sortDis(self.DisSort[i],d)
+//		ds,sortlist[i] = sortDis(ds,d)
+//		disSort[i] = ds
+		diss:= make([]*Distance,len(disSort[i]))
+		copy(diss,disSort[i])
+		disSort[i],sortlist[i] = sortDis(diss,d)
+
+//		sortlist[i] = 0
+//		disSort[i] = append(disSort[i],d)
+
+		self.Sum+=d.dis
+		self.DisCount ++
 		dis,_ = sortDis(dis,d)
 	}
-	self.RawPatterns = append(self.RawPatterns,v)
-	self.DisSort = append(self.DisSort,dis)
+//	for i,ds := range disSort {
+//
+//		ds := disSort[i]
+//		if len(ds) != len(self.RawPatterns) {
+//			panic(98)
+//		}
+//		pa := self.RawPatterns[i]
+//		for j,d := range ds {
+//			v1 := d.a
+//			if v1 == pa {
+//				v1 = d.b
+//			}
+//			if v1 == v {
+//				continue
+//			}
+//			isb:= false
+//			for _,p := range self.RawPatterns {
+//				if p == v1 {
+//					isb = true
+//					break
+//				}
+//			}
+//			if !isb {
+//				fmt.Println(j,d)
+//				fmt.Println(self.RawPatterns)
+//				fmt.Printf("%p \r\n",v1)
+//				panic(99)
+//			}
+//		}
+//	}
+
+	self.RawPatterns = append(RawPatterns,v)
+	self.DisSort = append(disSort,dis)
+	self.CountY[v.Y]++
+//	var L int
+//	self.RawPatterns,L = AppendSortVal(RawPatterns,v)
+//	self.DisSort = append(append(disSort[:L],dis),disSort[L:]...)
 	return &self,sortlist
 }
-func (self *Cl) DeleteVal(i int) {
-//	v := self.RawPatterns[i]
-	vd := self.DisSort[i]
-	self.DisSort = append(self.DisSort[:i],self.DisSort[i+1 :]...)
-	self.RawPatterns = append(self.RawPatterns[:i],self.RawPatterns[i+1 :]...)
-	return
-	for _,ds := range self.DisSort {
-		J:
+func (self *Cl) GetPG() float64{
+	return self.Sum/self.DisCount
+}
+func (self *Cl) DeleteVal(I int) {
+//	fmt.Println("del")
+//	ld := len(self.DisSort)
+//	lr := len(self.RawPatterns)
+//	for t,di:= range self.DisSort {
+//		li := len(di)+1
+//		fmt.Println(t,li,ld,lr," ")
+//		fmt.Println(di)
+//		if ld  != li {
+//			fmt.Println(di)
+//			panic(10)
+//		}
+//	}
+
+	v:=self.RawPatterns[I]
+	self.DisSort = append(self.DisSort[:I],self.DisSort[I+1 :]...)
+	self.RawPatterns = append(self.RawPatterns[:I],self.RawPatterns[I+1 :]...)
+	var errI []int
+	for i,ds := range self.DisSort {
+//		L := len(ds)
+		isD := false
+//		fmt.Println("b",i,L,len(self.DisSort)," ")
+//		for j:= L-1;j>=0;j-- {
 		for j,d := range ds {
-			for _j,_d := range vd {
-				if _d != d {
-					continue
-				}
-				ds = append(ds[:j],ds[j+1:]...)
-				vd = append(vd[:_j],vd[_j+1:]...)
-				break J
+//			d := ds[j]
+			if d.a == v || d.b == v {
+				self.DisSort[i] = append(ds[:j],ds[j+1:]...)
+				self.Sum -= d.dis
+				self.DisCount --
+				isD = true
+				break
 			}
 		}
+//		fmt.Println(self.DisSort[i])
+		if !isD {
+			errI = append(errI,i)
+		}
+//		fmt.Println("e",i,len(self.DisSort[i]))
 	}
+	if errI != nil {
+		fmt.Println(errI)
+		panic(2)
+	}
+	self.CountY[v.Y]--
+
+//	ld := len(self.DisSort)
+//	lr := len(self.RawPatterns)
+//	for t,di:= range self.DisSort {
+//		li := len(di)+1
+////		fmt.Println(t,li,ld,lr," ")
+//		if ld  != li {
+//			fmt.Println(di)
+//			panic(2)
+//		}
+//	}
+
+//	panic(0)
 //	self.UpdateCore()
 }
 func (self *Cl) OutputCheck(L []int) ([]int) {
@@ -60,7 +159,7 @@ func (self *Cl) OutputCheck(L []int) ([]int) {
 	}
 	lastDis := self.DisSort[Le]
 	core := self.RawPatterns[self.Core]
-	last := self.RawPatterns[Le]
+//	last := self.RawPatterns[Le]
 	var tmpint []int
 	AppendSort := func(li []int,a int) []int {
 		L := len(li)
@@ -75,28 +174,29 @@ func (self *Cl) OutputCheck(L []int) ([]int) {
 		}
 		return li
 	}
-//	fmt.Println(self.Core,len(self.DisSort),Le,Lc)
 	for _,d1 := range self.DisSort[self.Core][Lc:] {
 		v1:=d1.a
 		if v1 == core {
 			v1 = d1.b
 		}
-//		fmt.Printf("%p %p %p \r\n",d1,v1,core)
-		for i,d2 := range lastDis {
-			v2 := d2.a
-			if v2 == last {
-				v2 = d2.b
-			}
-			if v2 == v1 {
-
-//			if d2.a == v1 {
-			//	fmt.Printf("%p %p %p %p\r\n",d1,d2,v1,v2)
+		isB := -1
+		for j,d2 := range lastDis {
+//			fmt.Println(d2)
+			if d2.a == v1 {//|| d2.b == v1 {
 				if d1.dis > d2.dis {
 					tmpint = AppendSort(tmpint,d2.i)
-					lastDis = append(lastDis[:i],lastDis[i+1 :]...)
 				}
+				isB = j
 				break
 			}
+		}
+//		fmt.Println("to:",d1)
+//		fmt.Println("do:",self.RawPatterns)
+//		fmt.Printf("%d %p %p\r\n",Lc,core,last)
+		if isB<0 {
+//			fmt.Println(v1)
+//			fmt.Printf("%p %p %p \r\n",d1,v1,core)
+			panic(3)
 		}
 	}
 	return tmpint
@@ -130,7 +230,7 @@ func (self *Cl) Append(v *tmpdata.Val) (L int)  {
 //	}
 	if self.RawPatterns == nil {
 		self.RawPatterns = []*tmpdata.Val{v}
-		self.DisSort = make([][]*Distance,1)
+		self.DisSort = [][]*Distance{nil}
 	}else{
 		var dis []*Distance
 		for i,pa := range self.RawPatterns {
@@ -138,11 +238,14 @@ func (self *Cl) Append(v *tmpdata.Val) (L int)  {
 			d.Init(pa,v,i)
 			self.DisSort[i],_ = sortDis(self.DisSort[i],d)
 			dis,_ = sortDis(dis,d)
+			self.Sum+=d.dis
+			self.DisCount ++
 		}
 		var L int
 		self.RawPatterns,L = AppendSortVal(self.RawPatterns,v)
-		self.DisSort = append(append(self.DisSort[:L],dis),self.DisSort[L+1 :]...)
+		self.DisSort = append(append(self.DisSort[:L],dis),self.DisSort[L:]...)
 	}
+	self.CountY[v.Y]++
 	return L
 }
 func AppendSortVal(vs []*tmpdata.Val,v *tmpdata.Val) ([]*tmpdata.Val,int) {

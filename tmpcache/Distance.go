@@ -44,12 +44,11 @@ func sortDis(dis []*Distance,d *Distance) ([]*Distance,int) {
 //	L := Ls-1
 	dis  = append(dis,d)
 	for i := Ls -1 ;i>=0 ;i-- {
-		if dis[i].dis > d.dis {
-			dis[i],dis[Ls] = dis[Ls],dis[i]
-			Ls = i
-		}else{
+		if dis[i].dis < d.dis {
 			break
 		}
+		dis[i],dis[Ls] = dis[Ls],dis[i]
+		Ls = i
 	}
 	return dis,Ls
 }
