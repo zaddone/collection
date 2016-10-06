@@ -42,6 +42,36 @@ func (self *Clus) Append(v *tmpdata.Val)  {
 	}
 	self.AppendVal(v,1)
 }
+func (self *Clus) FindSame(v *tmpdata.Val) *Distance {
+	clus,tmps := self.getTmpVal()
+	if clus == nil {
+		return nil
+	}
+	dis := (&Cl{RawPatterns:tmps}).FindSortVal(v)
+	Long := len(dis)
+	if Long > LongLen {
+		Long = LongLen
+	}
+	tmpDisSort:=make([]*Distance,Long)
+//	sortlist:=make([]int,Long)
+	var ls,out int
+	for j,d := range dis[:Long] {
+		cl,_:=clus[d.i].TmpAppendVal(v)
+		tmpDisSort[j] = cl.DisSort[len(cl.DisSort)-1][0]
+//		sortlist[j] = j
+		ls = appendDis(tmpDisSort,j)
+		if ls == 0 {
+			out = 0
+		}else{
+			out ++
+			if out >10 {
+				Long = j+1
+				break
+			}
+		}
+	}
+	return tmpDisSort[0]
+}
 func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
 
 	clus,tmps := self.getTmpVal()
@@ -52,12 +82,12 @@ func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
 	if Long > LongLen {
 		Long = LongLen
 	}
-	var tmpDisSort []*Distance
+	tmpDisSort:=make( []*Distance,Long)
 	var tmpc []*Cl = make([]*Cl,Long)
 	var tmpli [][]int = make([][]int,Long)
 	var minT int = -1
 	var ls int
-	var sortlist []int
+	sortlist:=make( []int,Long)
 	out := 0
 	for j,d := range dis[:Long] {
 //		fmt.Println(d.i)
@@ -65,14 +95,16 @@ func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
 		cl,L:=clus[d.i].TmpAppendVal(v)
 		tmpc[j] = cl
 		tmpli[j] = L
-		md :=cl.DisSort[len(cl.DisSort)-1][0]
-
-		tmpDisSort,ls = sortDis(tmpDisSort,md)
-		if sortlist == nil {
-			sortlist = []int{j}
-		}else{
-			sortlist = append(append(sortlist[:ls],j),sortlist[ls:]...)
-		}
+//		md :=cl.DisSort[len(cl.DisSort)-1][0]
+		tmpDisSort[j] = cl.DisSort[len(cl.DisSort)-1][0]
+		sortlist[j] = j
+		ls = appendSort(tmpDisSort,sortlist,j)
+//		tmpDisSort,ls = sortDis(tmpDisSort,md)
+//		if sortlist == nil {
+//			sortlist = []int{j}
+//		}else{
+//			sortlist = append(append(sortlist[:ls],j),sortlist[ls:]...)
+//		}
 		if ls == 0 {
 			out = 0
 			minT = j
@@ -98,7 +130,7 @@ func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
 		clus[dis[minT].i].Copy(cp)
 	}
 	if isdiff != nil {
-		for j,d := range tmpDisSort[1:] {
+		for j,d := range tmpDisSort[1:Long] {
 			if d.a.C == v.C {
 				testd := new(Distance)
 				testd.Init(d.a,isdiff.a,0)

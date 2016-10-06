@@ -24,9 +24,9 @@ type Distance struct {
 func (self *Distance) Init (a,b *tmpdata.Val,i int) {
 //	self.dis = EucDistance(a.X,b.X)
 
-	self.dis = (b.Cur.GetErrOther(a.X)+a.Cur.GetErrOther(b.X))*0.5
+//	self.dis = (b.Cur.GetErrOther(a.X)+a.Cur.GetErrOther(b.X))*0.5
 
-//	self.dis = b.Cur.GetErrOther(a.X)
+	self.dis = b.Cur.GetErrOther(a.X)
 //	dis1 :=	a.Cur.GetErrOther(b.X)
 //	fmt.Println(self.dis,dis1)
 	self.a = a
@@ -51,4 +51,27 @@ func sortDis(dis []*Distance,d *Distance) ([]*Distance,int) {
 		Ls = i
 	}
 	return dis,Ls
+}
+func appendDis (j []*Distance,L int) (int) {
+	for i:= L -1; i>=0;i-- {
+		if j[L].dis < j[i].dis {
+			j[i],j[L] = j[L],j[i]
+			L = i
+		}else{
+			break
+		}
+	}
+	return L
+}
+func appendSort (j []*Distance,g []int,L int) (int) {
+	for i:= L -1; i>=0;i-- {
+		if j[L].dis < j[i].dis {
+			j[i],j[L] = j[L],j[i]
+			g[i],g[L] = g[L],g[i]
+			L = i
+		}else{
+			break
+		}
+	}
+	return L
 }

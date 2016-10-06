@@ -24,62 +24,41 @@ func (self *Cl) Clear(){
 	self.CountY = [3]int{0,0,0}
 }
 func (self Cl) TmpAppendVal(v *tmpdata.Val) (*Cl, []int) {
-	sortlist:=make([]int,len(self.RawPatterns))
-	var dis []*Distance
-	disSort:= make([][]*Distance,len(self.DisSort))
-	RawPatterns:= make([]*tmpdata.Val,len(self.RawPatterns))
+	L := len(self.RawPatterns)
+	sortlist:=make([]int,L)
+	dis:=make([]*Distance,L)
+	disSort:= make([][]*Distance,L+1)
+	RawPatterns:= make([]*tmpdata.Val,L+1)
 	copy(RawPatterns,self.RawPatterns)
 	copy(disSort,self.DisSort)
 //	fmt.Printf("append %p\r\n",v)
-	for i,pa := range RawPatterns {
+	for i,pa := range self.RawPatterns {
 		d := new(Distance)
 		d.Init(pa,v,i)
 //		ds,sortlist[i] = sortDis(ds,d)
 //		disSort[i] = ds
-		diss:= make([]*Distance,len(disSort[i]))
+		diss:= make([]*Distance,L)
 		copy(diss,disSort[i])
-		disSort[i],sortlist[i] = sortDis(diss,d)
+		diss[L-1] = d
+		sortlist[i] = appendDis(diss,L-1)
+		disSort[i] = diss
+//		disSort[i],sortlist[i] = sortDis(diss,d)
 
 //		sortlist[i] = 0
 //		disSort[i] = append(disSort[i],d)
 
 		self.Sum+=d.dis
 		self.DisCount ++
-		dis,_ = sortDis(dis,d)
+		dis[i]=d
+		appendDis(dis,i)
+//		dis,_ = sortDis(dis,d)
 	}
-//	for i,ds := range disSort {
-//
-//		ds := disSort[i]
-//		if len(ds) != len(self.RawPatterns) {
-//			panic(98)
-//		}
-//		pa := self.RawPatterns[i]
-//		for j,d := range ds {
-//			v1 := d.a
-//			if v1 == pa {
-//				v1 = d.b
-//			}
-//			if v1 == v {
-//				continue
-//			}
-//			isb:= false
-//			for _,p := range self.RawPatterns {
-//				if p == v1 {
-//					isb = true
-//					break
-//				}
-//			}
-//			if !isb {
-//				fmt.Println(j,d)
-//				fmt.Println(self.RawPatterns)
-//				fmt.Printf("%p \r\n",v1)
-//				panic(99)
-//			}
-//		}
-//	}
 
-	self.RawPatterns = append(RawPatterns,v)
-	self.DisSort = append(disSort,dis)
+
+	RawPatterns[L] = v
+	disSort[L] = dis
+	self.RawPatterns = RawPatterns
+	self.DisSort = disSort
 	self.CountY[v.Y]++
 //	var L int
 //	self.RawPatterns,L = AppendSortVal(RawPatterns,v)
@@ -202,10 +181,13 @@ func (self *Cl) OutputCheck(L []int) ([]int) {
 	return tmpint
 }
 func (self *Cl) UpdateCore() {
-	var maxdis []*Distance
+	maxdis:=make([]*Distance,len(self.DisSort))
 	var ls int
 	for t,d := range self.DisSort {
-		maxdis,ls = sortDis(maxdis,d[len(d)-1])
+		maxdis[t] = d[len(d)-1]
+		ls = appendDis(maxdis,t)
+//		fmt.Println(t,len(d),"____")
+//		maxdis,ls = sortDis(maxdis,d[len(d)-1])
 		if ls == 0 {
 			self.Core = t
 		}
@@ -214,10 +196,13 @@ func (self *Cl) UpdateCore() {
 }
 func (self *Cl) FindSortVal(v *tmpdata.Val) (dis []*Distance) {
 
+	dis = make([]*Distance,len(self.RawPatterns))
 	for i,pa := range self.RawPatterns {
 		d := new(Distance)
 		d.Init(pa,v,i)
-		dis,_ = sortDis(dis,d)
+		dis[i]=d
+		appendDis(dis,i)
+//		dis,_ = sortDis(dis,d)
 	}
 	return dis
 
@@ -232,12 +217,14 @@ func (self *Cl) Append(v *tmpdata.Val) (L int)  {
 		self.RawPatterns = []*tmpdata.Val{v}
 		self.DisSort = [][]*Distance{nil}
 	}else{
-		var dis []*Distance
+		dis := make( []*Distance,len(self.RawPatterns))
 		for i,pa := range self.RawPatterns {
 			d := new(Distance)
 			d.Init(pa,v,i)
 			self.DisSort[i],_ = sortDis(self.DisSort[i],d)
-			dis,_ = sortDis(dis,d)
+			dis[i] = d
+			appendDis(dis,i)
+//			dis,_ = sortDis(dis,d)
 			self.Sum+=d.dis
 			self.DisCount ++
 		}

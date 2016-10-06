@@ -52,8 +52,14 @@ func (self *Curve) Append(x []float64,y float64,t int) {
 		if I < len(x){
 			for _,_y := range x[I:] {
 				z:= math.Sqrt(_x*_x+_y*_y)
-				xs = append(xs,_x/z)
-				xs = append(xs,_y/z)
+				sin :=_x/z
+				con :=_y/z
+				xs = append(xs,sin)
+				xs = append(xs,sin*sin)
+//				xs = append(xs,sin*sin*sin)
+				xs = append(xs,con)
+				xs = append(xs,con*con)
+//				xs = append(xs,con*con*sin)
 			}
 		}
 	}

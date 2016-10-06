@@ -77,8 +77,8 @@ func (self *BlockInfo) SendData(Cache *tmpcache.Cache) int {
 //		C = 0
 	}
 	Cache.Input(&tmpdata.Val{X:self.covs.GetWeights(),K:[]int{0},Y:Y,C:self.IsBuy,Cur:self.covs})
-	if self.TestBuy < 2 {
-//	if self.TestBuy < 3 {
+//	if self.TestBuy < 2 {
+	if self.TestBuy < 3 {
 //	if self.TestBuy < 2 && Y < 2 {
 		Cache.TestInfo(self.TestBuy == Y)
 	}

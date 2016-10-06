@@ -10,7 +10,7 @@ import (
 )
 const (
 	Timeout   uint64   = 30000
-	BB   float64   = 2
+	BB   float64   = 3
 )
 type Feature struct {
 
