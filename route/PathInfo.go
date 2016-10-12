@@ -42,8 +42,8 @@ func (self *PathInfo) SetTrend(tr Blocks)  {
 
 func (self *PathInfo) UpdateMT(path string,listener *net.Listener){
 
-//	db := new(block.Block)
-	db := new(block.Feature)
+	db := new(block.Block)
+//	db := new(block.Feature)
 	db.Init(listener)
 	db.SetSignal(filepath.Join(path,self.Name))
 //	db.InitConn(host.GetAddrStr())

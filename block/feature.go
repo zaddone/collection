@@ -15,9 +15,7 @@ const (
 type Feature struct {
 
 	Atlias   []*signal.Atlias
-
 	lastAt   *signal.Atlias
-
 	last   []*BlockInfo
 
 	lastBak  []*BlockInfo
