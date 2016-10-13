@@ -15,6 +15,15 @@ type Curve struct {
 	Y [][]float64
 	w []float64
 }
+func (self *Curve) SetWeight(w []float64) {
+	self.w = w
+}
+func (self *Curve) Over(Len int) {
+	if len(self.X) >= Len {
+		self.X = self.X[:Len]
+		self.Y = self.Y[:Len]
+	}
+}
 func (self *Curve) Init(Len int) {
 	self.X = make([][]float64,Len)
 	self.Y = make([][]float64,Len)
@@ -55,17 +64,22 @@ func (self *Curve) Append(x []float64,y float64,t int) {
 				sin :=_x/z
 				con :=_y/z
 				xs = append(xs,sin)
-				xs = append(xs,sin*sin)
+//				xs = append(xs,sin*sin)
 //				xs = append(xs,sin*sin*sin)
 				xs = append(xs,con)
-				xs = append(xs,con*con)
+//				xs = append(xs,con*con)
 //				xs = append(xs,con*con*sin)
 			}
 		}
 	}
-	self.X[t] = xs
+	if len(self.X)<=t {
+		self.X = append(self.X,xs)
+		self.Y = append(self.Y,[]float64{y})
+	}else{
+		self.X[t] = xs
+		self.Y[t] = []float64{y}
+	}
 
-	self.Y[t] = []float64{y}
 }
 
 //type Curves struct {

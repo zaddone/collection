@@ -155,6 +155,7 @@ func (self *Cache)Init(listener *net.Listener) *Cache {
 
 //	self.SedsMap = make(map[[KeyLen]int]*Clusters)
 	self.Sedslist = new(Clus)
+	self.Sedslist.Init(self)
 //	self.CluMap  = make(map[string]*Clu)
 //	self.TmpMap = make(map[[KeyLen]int][]*tmpdata.Val)
 //	self.ConnPool = make(chan int,POOL)
@@ -172,7 +173,7 @@ func (self *Cache)Init(listener *net.Listener) *Cache {
 
 }
 func (self *Cache) ShowInfo() string {
-	return fmt.Sprintf("%.5f %.1f %.1f",self.er/self.same,self.er,self.same)
+	return fmt.Sprintf("%.5f %.0f %.0f",self.er/self.same,self.er,self.same)
 }
 func GetMapKey(k []int) (key [KeyLen]int) {
 	if KeyLen == 1 {
@@ -233,6 +234,7 @@ func (self *Cache) Forecast(v *tmpdata.Val) (int,error) {
 func (self *Cache) Input(v *tmpdata.Val) (error) {
 //	fmt.Println(v.X)
 	self.Sedslist.Append(v)
+
 	return nil
 //	key := GetMapKey(v.K)
 //	Clus :=self.SedsMap[key]

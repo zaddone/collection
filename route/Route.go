@@ -64,7 +64,7 @@ func (self *Route) Init (path string, OutPath string,lastFile string,Port string
 		panic(err)
 	}
 	go self.Console()
-	go self.bakServer()
+//	go self.bakServer()
 	return nil
 }
 func (self *Route) SetLastInfo() error {
@@ -210,14 +210,15 @@ func (self *Route) QueryCache(name string) {
 	sed:=last.Pi.tr.GetCache().Sedslist
 	kcon:=0
 	con:=0
-	sedLen:=10
+	sedLen := 10
 	seds := make([]*tmpcache.Cl,sedLen)
 	for _,c := range sed.Clu {
 		L := len(c.RawPatterns)
 		con += L
-		if L > 15 {
+//		if c.CountY[0] == 0 || c.CountY[1] == 0 {
+		if L > 10 {
 			if sedLen > 0 {
-				sedLen -- 
+				sedLen --
 				seds[sedLen]=c
 			}
 			kcon+=L
@@ -238,6 +239,10 @@ func (self *Route) QueryCache(name string) {
 		}
 		for _,cl := range seds {
 			if cl != nil {
+//				fmt.Println("begin")
+//				for _,v := range cl.RawPatterns {
+//					fmt.Println(v.Y)
+//				}
 				fmt.Println(cl.CountY,cl.GetPG())
 			}
 		}

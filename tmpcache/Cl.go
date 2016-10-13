@@ -10,11 +10,13 @@ type Cl struct {
 	Sum   float64
 	DisCount float64
 	Core   int
+	oic   *Cl
 }
 func (self *Cl) Copy(c *Cl) {
 	self.RawPatterns = c.RawPatterns
 	self.DisSort = c.DisSort
 	self.Core = c.Core
+//	fmt.Println(self.CountY,c.CountY)
 	self.CountY = c.CountY
 }
 func (self *Cl) Clear(){
@@ -22,6 +24,9 @@ func (self *Cl) Clear(){
 	self.DisSort = nil
 	self.Core = -1
 	self.CountY = [3]int{0,0,0}
+}
+func (self *Cl) SetOic(c *Cl) {
+	self.oic = c
 }
 func (self Cl) TmpAppendVal(v *tmpdata.Val) (*Cl, []int) {
 	L := len(self.RawPatterns)

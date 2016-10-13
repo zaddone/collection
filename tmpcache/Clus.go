@@ -3,7 +3,7 @@ import (
 	"github.com/zaddone/collection/tmpdata"
 	"encoding/json"
 	"sync"
-//	"fmt"
+	"fmt"
 )
 const (
 	LongLen int = 100
@@ -76,7 +76,6 @@ func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
 
 	clus,tmps := self.getTmpVal()
 
-//	fmt.Printf("%d %p\r\n",self.ValCount,v)
 	dis := (&Cl{RawPatterns:tmps}).FindSortVal(v)
 	Long := len(dis)
 	if Long > LongLen {
@@ -90,21 +89,13 @@ func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
 	sortlist:=make( []int,Long)
 	out := 0
 	for j,d := range dis[:Long] {
-//		fmt.Println(d.i)
-//		fmt.Println(clus[d.i])
 		cl,L:=clus[d.i].TmpAppendVal(v)
+		cl.SetOic(clus[d.i])
 		tmpc[j] = cl
 		tmpli[j] = L
-//		md :=cl.DisSort[len(cl.DisSort)-1][0]
 		tmpDisSort[j] = cl.DisSort[len(cl.DisSort)-1][0]
 		sortlist[j] = j
 		ls = appendSort(tmpDisSort,sortlist,j)
-//		tmpDisSort,ls = sortDis(tmpDisSort,md)
-//		if sortlist == nil {
-//			sortlist = []int{j}
-//		}else{
-//			sortlist = append(append(sortlist[:ls],j),sortlist[ls:]...)
-//		}
 		if ls == 0 {
 			out = 0
 			minT = j
@@ -117,6 +108,14 @@ func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
 		}
 	}
 	var isdiff *Distance
+//	fmt.Println(tmpDisSort[0])
+//	fmt.Printf("%p\r\n",v)
+	if isBack == 1 {
+		self.ca.same++
+		if tmpDisSort[0].a.C != v.C {
+			self.ca.er ++
+		}
+	}
 	if tmpDisSort[0].a.C != v.C {
 		isdiff = tmpDisSort[0]
 //		newClu := new(Cl)
@@ -124,10 +123,26 @@ func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
 //		self.Clu = append(self.Clu,newClu)
 //		minT = -1
 	}else{
+	//	fmt.Println(tmpDisSort[0].a)
+	//	fmt.Println(v)
 		minT = sortlist[0]
 		cp :=tmpc[minT]
+
+		isFind:= false
+		for _,val := range cp.RawPatterns {
+			if val == tmpDisSort[0].a {
+				isFind = true
+				break
+			}
+		}
+		if !isFind {
+			fmt.Println("find not")
+			panic(99)
+		}
+
 		cp.UpdateCore()
-		clus[dis[minT].i].Copy(cp)
+		cp.oic.Copy(cp)
+//		clus[dis[minT].i].Copy(cp)
 	}
 	if isdiff != nil {
 		for j,d := range tmpDisSort[1:Long] {
@@ -135,10 +150,24 @@ func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
 				testd := new(Distance)
 				testd.Init(d.a,isdiff.a,0)
 				if testd.dis > d.dis {
-					minT = sortlist[j]
+					minT = sortlist[1:Long][j]
 					cp :=tmpc[minT]
+
+					isFind:= false
+					for _,val := range cp.RawPatterns {
+						if val == d.a {
+							isFind = true
+							break
+						}
+					}
+					if !isFind {
+						fmt.Println("find not")
+						panic(99)
+					}
+
 					cp.UpdateCore()
-					clus[dis[minT].i].Copy(cp)
+					cp.oic.Copy(cp)
+//					clus[dis[minT].i].Copy(cp)
 					isdiff = nil
 					break
 				}
