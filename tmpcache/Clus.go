@@ -7,7 +7,7 @@ import (
 	"fmt"
 )
 const (
-	LongLen int = 50
+	LongLen int = 10
 	LongIsBack int = 1
 	MaxLong  int = 10000
 )
@@ -74,6 +74,23 @@ func (self *Clus) FindSame(v *tmpdata.Val) *Distance {
 		}
 	}
 	return tmpDisSort[0]
+}
+func (self *Clus) AppendVal1(v *tmpdata.Val,isBack int)  {
+
+//	clus,tmps := self.getTmpVal()
+//	dis := (&Cl{RawPatterns:tmps}).FindSortVal(v)
+//	Long := len(dis)
+//	if Long > LongLen {
+//		Long = LongLen
+//	}
+//	for j,d := range dis[:Long] {
+//		oic := clus[d.i]
+//		cl,L:=oic.TmpAppendVal(v)
+//		cl.SetOic(oic)
+//		ls := cl.OutputCheck(L)
+//	}
+
+
 }
 func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
 
@@ -149,10 +166,16 @@ func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
 		}
 	}
 	if isBack == 1 {
-//		minCl := clus[sortlist[0]]
+		minCl := clus[sortlist[0]]
+		kv := float64(minCl.CountY[0])/float64(minCl.CountY[1])
+		if kv > 1.5 || kv < 0.5 {
+			Y := 0
+			if minCl.CountY[0] < minCl.CountY[1] {
+				Y =1
+			}
 //		if float64(minCl.CountY[0])/float64(minCl.CountY[1]) < 0.5 {
 			di := tmpDisSort[0]
-//			if di.a.Y != 0 {
+			if di.a.Y != Y {
 		if di.dis < curves.Errs {
 //			self.ca.same1++
 //			if di.a.C != v.C {
@@ -162,8 +185,8 @@ func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
 				if di.a.Y != v.Y {
 					self.ca.er ++
 				}
-//			}
-//			}
+			}
+			}
 		}
 	}
 	if firstCl != nil {
