@@ -1,13 +1,14 @@
 package tmpcache
 import (
 	"github.com/zaddone/collection/tmpdata"
+	"github.com/zaddone/collection/curves"
 	"encoding/json"
 	"sync"
 	"fmt"
 )
 const (
-	LongLen int = 100
-	LongIsBack int = 2
+	LongLen int = 50
+	LongIsBack int = 1
 	MaxLong  int = 10000
 )
 type Clus struct {
@@ -15,6 +16,8 @@ type Clus struct {
 	ca *Cache
 //	Len int
 	ValCount int
+	ErrMin *Distance
+	OkMin *Distance
 }
 func (self *Clus) Init(ca *Cache)  {
 	self.ca = ca
@@ -82,6 +85,118 @@ func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
 		Long = LongLen
 	}
 	tmpDisSort:=make( []*Distance,Long)
+	sortlist:=make( []int,Long)
+	var tmpClu []*Cl
+	var vals []*tmpdata.Val
+	var firstCl *Cl
+	isB := 0
+	for j,d := range dis[:Long] {
+//		fmt.Println(i,d.i)
+		oic := clus[d.i]
+		cl,_:=oic.TmpAppendVal(v)
+		cl.SetOic(oic)
+		if firstCl == nil && vals == nil {
+			tmpClu = append(tmpClu,cl)
+//			fmt.Println(tmpClu)
+		}
+		L := len(oic.RawPatterns)
+		tmpDisSort[j] = cl.DisSort[L][0]
+		sortlist[j] = d.i
+		appendSort(tmpDisSort,sortlist,j)
+		//appendDis(tmpDisSort,j)
+		var delist []int
+//		var vs []*tmpdata.Val
+		for _,d := range cl.DisSort[L] {
+			if d.dis < curves.Errs {
+//				vs = append(vs,d.a)
+				delist= AppendSort(delist,d.i)
+			}
+		}
+		if delist == nil {
+			if isB <3 {
+				isB ++
+				continue
+			}else{
+				break
+			}
+
+		}
+		if float64(len(delist))/float64(L) >= 0.5 {
+		//	cl.Clear()
+			if firstCl == nil {
+				firstCl = cl
+			}else{
+				vals = append(vals,cl.RawPatterns...)
+				oic.Clear()
+				cl = nil
+			}
+		}else{
+//			fmt.Println(delist,L)
+			for _,d_i := range delist {
+//				fmt.Printf("%d \r\n",d_i)
+				_v,err := oic.DeleteVal(d_i)
+				if err != nil {
+					fmt.Println(delist)
+					fmt.Println(oic.RawPatterns)
+					fmt.Println(cl.RawPatterns)
+					fmt.Printf("%p %p\r\n",_v,v)
+					panic(err)
+				}
+				vals = append(vals,_v)
+			}
+			oic.UpdateCore()
+			cl = nil
+		}
+	}
+	if isBack == 1 {
+//		minCl := clus[sortlist[0]]
+//		if float64(minCl.CountY[0])/float64(minCl.CountY[1]) < 0.5 {
+			di := tmpDisSort[0]
+//			if di.a.Y != 0 {
+		if di.dis < curves.Errs {
+//			self.ca.same1++
+//			if di.a.C != v.C {
+//				self.ca.er1 ++
+//			}else{
+				self.ca.same++
+				if di.a.Y != v.Y {
+					self.ca.er ++
+				}
+//			}
+//			}
+		}
+	}
+	if firstCl != nil {
+		for _,_v := range vals{
+			firstCl.Append(_v)
+		}
+		firstCl.UpdateCore()
+		firstCl.oic.Copy(firstCl)
+	}else if vals != nil{
+		firstCl = new(Cl)
+		firstCl.Append(v)
+		for _,_v := range vals{
+			firstCl.Append(_v)
+		}
+		firstCl.UpdateCore()
+		self.Clu = append(self.Clu,firstCl)
+	}else{
+		firstCl = tmpClu[0]
+		firstCl.UpdateCore()
+		firstCl.oic.Copy(firstCl)
+	}
+
+}
+func (self *Clus) AppendValBak(v *tmpdata.Val,isBack int)  {
+
+	clus,tmps := self.getTmpVal()
+
+	dis := (&Cl{RawPatterns:tmps}).FindSortVal(v)
+	Long := len(dis)
+	if Long > LongLen {
+		Long = LongLen
+	}
+	tmpDisSort:=make( []*Distance,Long)
 	var tmpc []*Cl = make([]*Cl,Long)
 	var tmpli [][]int = make([][]int,Long)
 	var minT int = -1
@@ -114,6 +229,12 @@ func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
 		self.ca.same++
 		if tmpDisSort[0].a.C != v.C {
 			self.ca.er ++
+		}
+		if tmpDisSort[0].dis < curves.Errs {
+			self.ca.same1 ++
+			if tmpDisSort[0].a.C != v.C {
+				self.ca.er1 ++
+			}
 		}
 	}
 	if tmpDisSort[0].a.C != v.C {
@@ -198,6 +319,8 @@ func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
 			}else{
 				break
 			}
+		}else{
+			outCount = 0
 		}
 		cp := clus[d.i]
 //		fmt.Println(ls,len(cp.RawPatterns))
@@ -215,7 +338,13 @@ func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
 			}
 			cp.UpdateCore()
 		}
+		if clus[d.i] != cp {
+			panic(999)
+		}
 		clus[d.i] = cp
+		if len(vals) >10{
+			break
+		}
 	}
 //	fmt.Println(len(vals),isBack)
 	if vals == nil {

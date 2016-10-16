@@ -13,25 +13,31 @@ const (
 type Curve struct {
 	X [][]float64
 	Y [][]float64
+
+	inX [][]float64
 	w []float64
 }
 func (self *Curve) SetWeight(w []float64) {
 	self.w = w
 }
 func (self *Curve) Over(Len int) {
-	if len(self.X) >= Len {
+	if len(self.X) > Len {
 		self.X = self.X[:Len]
+		self.inX = self.inX[:Len]
 		self.Y = self.Y[:Len]
 	}
+	
+	copy(self.inX,self.X)
 }
 func (self *Curve) Init(Len int) {
 	self.X = make([][]float64,Len)
+	self.inX = make([][]float64,Len)
 	self.Y = make([][]float64,Len)
 }
 func (self *Curve) GetWeightOther() ([]float64,error) {
 
-	Xs:=common.Transpose(self.X...)
-	XX:=common.MatrixInverse(common.MatrixMul(Xs,self.X))
+	Xs:=common.Transpose(self.inX...)
+	XX:=common.MatrixInverse(common.MatrixMul(Xs,self.inX))
 	XY:=common.MatrixMul(Xs,self.Y)
 	val :=common.MatrixMul( XX,XY)
 	A := common.Transpose(val...)[0]
@@ -44,7 +50,7 @@ func (self *Curve) GetWeightOther() ([]float64,error) {
 }
 func (self *Curve)GetErrOther(w []float64) float64 {
 	var Yerr float64
-	for i,x := range self.X {
+	for i,x := range self.inX {
 		y:=self.Y[i][0]
 		for j,_x := range x {
 			y -= w[j]*_x
@@ -66,6 +72,7 @@ func (self *Curve) Append(x []float64,y float64,t int) {
 				xs = append(xs,sin)
 //				xs = append(xs,sin*sin)
 //				xs = append(xs,sin*sin*sin)
+
 				xs = append(xs,con)
 //				xs = append(xs,con*con)
 //				xs = append(xs,con*con*sin)

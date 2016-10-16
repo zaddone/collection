@@ -41,6 +41,9 @@ type Cache struct {
 	same float64
 	er float64
 
+	same1 float64
+	er1 float64
+
 }
 func (self *Cache) TestInfo(isok bool) {
 	self.same ++
@@ -173,7 +176,7 @@ func (self *Cache)Init(listener *net.Listener) *Cache {
 
 }
 func (self *Cache) ShowInfo() string {
-	return fmt.Sprintf("%.5f %.0f %.0f",self.er/self.same,self.er,self.same)
+	return fmt.Sprintf("%.5f %.0f %.0f %.5f %.0f %.0f",self.er/self.same,self.er,self.same,self.er1/self.same1,self.er1,self.same1)
 }
 func GetMapKey(k []int) (key [KeyLen]int) {
 	if KeyLen == 1 {

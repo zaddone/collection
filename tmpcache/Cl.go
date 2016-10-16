@@ -35,15 +35,35 @@ func (self Cl) TmpAppendVal(v *tmpdata.Val) (*Cl, []int) {
 	disSort:= make([][]*Distance,L+1)
 	RawPatterns:= make([]*tmpdata.Val,L+1)
 	copy(RawPatterns,self.RawPatterns)
-	copy(disSort,self.DisSort)
+	RawPatterns[L] = v
+	disSort[L] = dis
+//	copy(disSort,self.DisSort)
 //	fmt.Printf("append %p\r\n",v)
 	for i,pa := range self.RawPatterns {
+//		for u,_d := range self.DisSort[i] {
+//			isF := false
+//			for h,_v := range self.RawPatterns {
+//				if h == i {
+//					continue
+//				}
+//				if _d.a == _v || _d.b == _v {
+//					isF = true
+//				}
+//			}
+//			if !isF {
+//				fmt.Println(_d,i,u,len(self.RawPatterns),len(self.DisSort[i]))
+//				fmt.Println(self.RawPatterns)
+//				panic(77)
+//			}
+//		}
+
 		d := new(Distance)
 		d.Init(pa,v,i)
 //		ds,sortlist[i] = sortDis(ds,d)
 //		disSort[i] = ds
 		diss:= make([]*Distance,L)
-		copy(diss,disSort[i])
+		copy(diss,self.DisSort[i])
+//		fmt.Println(diss)
 		diss[L-1] = d
 		sortlist[i] = appendDis(diss,L-1)
 		disSort[i] = diss
@@ -60,8 +80,6 @@ func (self Cl) TmpAppendVal(v *tmpdata.Val) (*Cl, []int) {
 	}
 
 
-	RawPatterns[L] = v
-	disSort[L] = dis
 	self.RawPatterns = RawPatterns
 	self.DisSort = disSort
 	self.CountY[v.Y]++
@@ -73,7 +91,7 @@ func (self Cl) TmpAppendVal(v *tmpdata.Val) (*Cl, []int) {
 func (self *Cl) GetPG() float64{
 	return self.Sum/self.DisCount
 }
-func (self *Cl) DeleteVal(I int) {
+func (self *Cl) DeleteVal(I int) (*tmpdata.Val,error) {
 //	fmt.Println("del")
 //	ld := len(self.DisSort)
 //	lr := len(self.RawPatterns)
@@ -96,9 +114,13 @@ func (self *Cl) DeleteVal(I int) {
 		isD := false
 //		fmt.Println("b",i,L,len(self.DisSort)," ")
 //		for j:= L-1;j>=0;j-- {
+//		var delD *Distance
+		str := ""
 		for j,d := range ds {
+			str += fmt.Sprintln(d)
 //			d := ds[j]
 			if d.a == v || d.b == v {
+//				delD = d
 				self.DisSort[i] = append(ds[:j],ds[j+1:]...)
 				self.Sum -= d.dis
 				self.DisCount --
@@ -106,17 +128,21 @@ func (self *Cl) DeleteVal(I int) {
 				break
 			}
 		}
-//		fmt.Println(self.DisSort[i])
+//		fmt.Printf("e %d %d %p %p %p\r\n",i,I,delD,v,self.RawPatterns[i])
+//		fmt.Println(delD)
+//		fmt.Println(str)
 		if !isD {
+			panic(55)
+			return v,fmt.Errorf("e:%d %d",len(self.DisSort[i]),I)
 			errI = append(errI,i)
 		}
-//		fmt.Println("e",i,len(self.DisSort[i]))
 	}
 	if errI != nil {
-		fmt.Println(errI)
+		fmt.Println("err:",errI)
 		panic(2)
 	}
 	self.CountY[v.Y]--
+	return v,nil
 
 //	ld := len(self.DisSort)
 //	lr := len(self.RawPatterns)
@@ -145,19 +171,6 @@ func (self *Cl) OutputCheck(L []int) ([]int) {
 	core := self.RawPatterns[self.Core]
 //	last := self.RawPatterns[Le]
 	var tmpint []int
-	AppendSort := func(li []int,a int) []int {
-		L := len(li)
-		li = append(li,a)
-		for i:= L -1 ;i >=0;i--{
-			if li[i]<a {
-				li[i],li[L] = li[L],li[i]
-				L = i
-			}else{
-				break
-			}
-		}
-		return li
-	}
 	for _,d1 := range self.DisSort[self.Core][Lc:] {
 		v1:=d1.a
 		if v1 == core {
@@ -184,6 +197,20 @@ func (self *Cl) OutputCheck(L []int) ([]int) {
 		}
 	}
 	return tmpint
+}
+
+func AppendSort (li []int,a int) []int {
+	L := len(li)
+	li = append(li,a)
+	for i:= L -1 ;i >=0;i--{
+		if li[i]<a {
+			li[i],li[L] = li[L],li[i]
+			L = i
+		}else{
+			break
+		}
+	}
+	return li
 }
 func (self *Cl) UpdateCore() {
 	maxdis:=make([]*Distance,len(self.DisSort))
@@ -220,13 +247,32 @@ func (self *Cl) Append(v *tmpdata.Val) (L int)  {
 //	}
 	if self.RawPatterns == nil {
 		self.RawPatterns = []*tmpdata.Val{v}
-		self.DisSort = [][]*Distance{nil}
+		self.DisSort = make([][]*Distance,1)
 	}else{
 		dis := make( []*Distance,len(self.RawPatterns))
 		for i,pa := range self.RawPatterns {
+//			for _,_d := range self.DisSort[i] {
+//				isF := false
+//				for h,_v := range self.RawPatterns {
+//					if h == i {
+//						continue
+//					}
+//					if _d.a == _v || _d.b == _v {
+//						isF = true
+//					}
+//				}
+//				if !isF {
+//					panic(77)
+//				}
+//			}
 			d := new(Distance)
 			d.Init(pa,v,i)
-			self.DisSort[i],_ = sortDis(self.DisSort[i],d)
+			if self.DisSort[i] == nil {
+				self.DisSort[i] = []*Distance{d}
+			}else{
+				self.DisSort[i],_ = sortDis(self.DisSort[i],d)
+			}
+
 			dis[i] = d
 			appendDis(dis,i)
 //			dis,_ = sortDis(dis,d)
@@ -234,8 +280,16 @@ func (self *Cl) Append(v *tmpdata.Val) (L int)  {
 			self.DisCount ++
 		}
 		var L int
+		Le:= len(self.RawPatterns)
 		self.RawPatterns,L = AppendSortVal(self.RawPatterns,v)
-		self.DisSort = append(append(self.DisSort[:L],dis),self.DisSort[L:]...)
+		if L == Le {
+			self.DisSort = append(self.DisSort,dis)
+		}else if Le == 0 {
+			self.DisSort = append([][]*Distance{dis},self.DisSort...)
+		}else{
+			tmpDis:=append([][]*Distance{},self.DisSort[L:]...)
+			self.DisSort = append(append(self.DisSort[:L],dis),tmpDis...)
+		}
 	}
 	self.CountY[v.Y]++
 	return L

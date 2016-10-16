@@ -215,7 +215,7 @@ func (self *Route) QueryCache(name string) {
 	for _,c := range sed.Clu {
 		L := len(c.RawPatterns)
 		con += L
-//		if c.CountY[0] == 0 || c.CountY[1] == 0 {
+//		if float64(c.CountY[0])/float64(c.CountY[1]) < 0.7 {
 		if L > 10 {
 			if sedLen > 0 {
 				sedLen --
