@@ -10,6 +10,7 @@ import (
 //	"strings"
 	"github.com/zaddone/collection/tmpcache"
 	"encoding/json"
+//	"math"
 )
 type Info struct {
 	Pi *PathInfo
@@ -215,15 +216,19 @@ func (self *Route) QueryCache(name string) {
 	for _,c := range sed.Clu {
 		L := len(c.RawPatterns)
 		con += L
-		kv := float64(c.CountY[0])/float64(c.CountY[1])
-		if kv > 1.5 || kv < 0.5 {
-//		if float64(c.CountY[0])/float64(c.CountY[1]) < 0.7 {
-//		if L > 10 {
-			if sedLen > 0 {
-				sedLen --
-				seds[sedLen]=c
-			}
-			kcon+=L
+		if L > 10 {
+
+//			a:=float64(c.CountY[0])
+//			b:=float64(c.CountY[1])
+//			kv := math.Abs(a-b)/(a+b)
+//			if kv > 0.7 {
+
+				if sedLen > 0 {
+					sedLen --
+					seds[sedLen]=c
+				}
+				kcon+=L
+//			}
 		}
 	}
 	fmt.Printf("%d %d %d %d\r\n",sed.ValCount,con,kcon,len(sed.Clu))

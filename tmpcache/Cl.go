@@ -11,6 +11,7 @@ type Cl struct {
 	DisCount float64
 	Core   int
 	oic   *Cl
+	lock   bool
 }
 func (self *Cl) Copy(c *Cl) {
 	self.RawPatterns = c.RawPatterns
@@ -40,46 +41,27 @@ func (self Cl) TmpAppendVal(v *tmpdata.Val) (*Cl, []int) {
 //	copy(disSort,self.DisSort)
 //	fmt.Printf("append %p\r\n",v)
 	for i,pa := range self.RawPatterns {
-//		for u,_d := range self.DisSort[i] {
-//			isF := false
-//			for h,_v := range self.RawPatterns {
-//				if h == i {
-//					continue
-//				}
-//				if _d.a == _v || _d.b == _v {
-//					isF = true
-//				}
-//			}
-//			if !isF {
-//				fmt.Println(_d,i,u,len(self.RawPatterns),len(self.DisSort[i]))
-//				fmt.Println(self.RawPatterns)
-//				panic(77)
-//			}
-//		}
 
 		d := new(Distance)
 		d.Init(pa,v,i)
-//		ds,sortlist[i] = sortDis(ds,d)
-//		disSort[i] = ds
 		diss:= make([]*Distance,L)
 		copy(diss,self.DisSort[i])
-//		fmt.Println(diss)
 		diss[L-1] = d
 		sortlist[i] = appendDis(diss,L-1)
 		disSort[i] = diss
-//		disSort[i],sortlist[i] = sortDis(diss,d)
-
-//		sortlist[i] = 0
-//		disSort[i] = append(disSort[i],d)
 
 		self.Sum+=d.dis
 		self.DisCount ++
 		dis[i]=d
 		appendDis(dis,i)
-//		dis,_ = sortDis(dis,d)
 	}
 
-
+	AppendSortValInt(RawPatterns,disSort,L)
+	str := ""
+	for _,p := range RawPatterns {
+		str = fmt.Sprintf("%s %d",str,p.GetH())
+	}
+	fmt.Println(str)
 	self.RawPatterns = RawPatterns
 	self.DisSort = disSort
 	self.CountY[v.Y]++
@@ -213,6 +195,10 @@ func AppendSort (li []int,a int) []int {
 	return li
 }
 func (self *Cl) UpdateCore() {
+	if len(self.RawPatterns) < 2 {
+		self.Core = 0
+		return
+	}
 	maxdis:=make([]*Distance,len(self.DisSort))
 	var ls int
 	for t,d := range self.DisSort {
@@ -251,20 +237,6 @@ func (self *Cl) Append(v *tmpdata.Val) (L int)  {
 	}else{
 		dis := make( []*Distance,len(self.RawPatterns))
 		for i,pa := range self.RawPatterns {
-//			for _,_d := range self.DisSort[i] {
-//				isF := false
-//				for h,_v := range self.RawPatterns {
-//					if h == i {
-//						continue
-//					}
-//					if _d.a == _v || _d.b == _v {
-//						isF = true
-//					}
-//				}
-//				if !isF {
-//					panic(77)
-//				}
-//			}
 			d := new(Distance)
 			d.Init(pa,v,i)
 			if self.DisSort[i] == nil {
@@ -292,6 +264,18 @@ func (self *Cl) Append(v *tmpdata.Val) (L int)  {
 		}
 	}
 	self.CountY[v.Y]++
+	return L
+}
+func AppendSortValInt(vs []*tmpdata.Val,disSort [][]*Distance,L int) int {
+	for i:= L -1; i>=0;i-- {
+		if vs[i].GetH() > vs[L].GetH() {
+			vs[i],vs[L] = vs[L],vs[i]
+			disSort[i],disSort[L] = disSort[L],disSort[i]
+			L = i
+		}else{
+			break
+		}
+	}
 	return L
 }
 func AppendSortVal(vs []*tmpdata.Val,v *tmpdata.Val) ([]*tmpdata.Val,int) {

@@ -208,9 +208,9 @@ func (self *Cache) Forecast(v *tmpdata.Val) (int,error) {
 //		if d.a.C != v.C {
 //			fmt.Println("dis",d.dis)
 //		}
-		if d.dis < 0.01 && d.a.C == v.C {
-			return d.a.Y,nil
-		}
+//		if d.dis < 0.01 && d.a.C == v.C {
+			return d.Y,nil
+//		}
 	}
 	return -1,fmt.Errorf("is nil")
 

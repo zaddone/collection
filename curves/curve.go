@@ -8,7 +8,8 @@ import (
 )
 const (
 //	ORDER float64 = 5
-	Errs  float64 = 0.01
+	Errs  float64 = 0.0001
+	Pow  float64 = 2
 )
 type Curve struct {
 	X [][]float64
@@ -16,18 +17,20 @@ type Curve struct {
 
 	inX [][]float64
 	w []float64
+
 }
 func (self *Curve) SetWeight(w []float64) {
 	self.w = w
 }
 func (self *Curve) Over(Len int) {
+
 	if len(self.X) > Len {
 		self.X = self.X[:Len]
 		self.inX = self.inX[:Len]
 		self.Y = self.Y[:Len]
 	}
-	
 	copy(self.inX,self.X)
+
 }
 func (self *Curve) Init(Len int) {
 	self.X = make([][]float64,Len)
@@ -49,6 +52,7 @@ func (self *Curve) GetWeightOther() ([]float64,error) {
 
 }
 func (self *Curve)GetErrOther(w []float64) float64 {
+
 	var Yerr float64
 	for i,x := range self.inX {
 		y:=self.Y[i][0]
@@ -58,27 +62,38 @@ func (self *Curve)GetErrOther(w []float64) float64 {
 		Yerr += y*y
 	}
 	return Yerr/float64(len(self.X)-1)
+
 }
 func (self *Curve) Append(x []float64,y float64,t int) {
+
 //	var xs []float64
 	xs := []float64{1}
-	for i,_x := range x {
-		I:= i+1
-		if I < len(x){
-			for _,_y := range x[I:] {
-				z:= math.Sqrt(_x*_x+_y*_y)
-				sin :=_x/z
-				con :=_y/z
-				xs = append(xs,sin)
-//				xs = append(xs,sin*sin)
-//				xs = append(xs,sin*sin*sin)
+	for _,_x := range x {
+//	for i,_x := range x {
+		ax := math.Atan(_x)*2/math.Pi
+		xs = append(xs,ax)
 
-				xs = append(xs,con)
-//				xs = append(xs,con*con)
-//				xs = append(xs,con*con*sin)
-			}
+		for g := 2.0 ; g <= Pow; g ++ {
+			xs = append(xs,math.Pow(ax,g))
 		}
+
+//		I:= i+1
+//		if I < len(x){
+//			for _,_y := range x[I:] {
+//				z:= math.Sqrt(_x*_x+_y*_y)
+//				sin :=_x/z
+//				con :=_y/z
+//				xs = append(xs,sin)
+////				xs = append(xs,sin*sin)
+////				xs = append(xs,sin*sin*sin)
+//
+//				xs = append(xs,con)
+////				xs = append(xs,con*con)
+////				xs = append(xs,con*con*sin)
+//			}
+//		}
 	}
+//	fmt.Println(y)
 	if len(self.X)<=t {
 		self.X = append(self.X,xs)
 		self.Y = append(self.Y,[]float64{y})
