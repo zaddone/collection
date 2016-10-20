@@ -203,6 +203,7 @@ func GetBL(vals []*tmpdata.Val) (o,e float64) {
 	return o,e
 }
 func (self *Cache) Forecast(v *tmpdata.Val) (int,error) {
+//	return -1,fmt.Errorf("is nil")
 	d := self.Sedslist.FindSame(v)
 	if d != nil {
 //		if d.a.C != v.C {

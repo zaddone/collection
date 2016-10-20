@@ -29,7 +29,7 @@ func (self *Cl) Clear(){
 func (self *Cl) SetOic(c *Cl) {
 	self.oic = c
 }
-func (self Cl) TmpAppendVal(v *tmpdata.Val) (*Cl, []int) {
+func (self Cl) TmpAppendVal(v *tmpdata.Val) (*Cl, []int,int) {
 	L := len(self.RawPatterns)
 	sortlist:=make([]int,L)
 	dis:=make([]*Distance,L)
@@ -56,36 +56,27 @@ func (self Cl) TmpAppendVal(v *tmpdata.Val) (*Cl, []int) {
 		appendDis(dis,i)
 	}
 
-	AppendSortValInt(RawPatterns,disSort,L)
-	str := ""
-	for _,p := range RawPatterns {
-		str = fmt.Sprintf("%s %d",str,p.GetH())
-	}
-	fmt.Println(str)
+//	L = AppendSortValInt(RawPatterns,disSort,L)
+
+//	str := ""
+//	for _,p := range RawPatterns {
+//		str = fmt.Sprintf("%s %d",str,p.GetH())
+//	}
+//	fmt.Println(str)
+
 	self.RawPatterns = RawPatterns
 	self.DisSort = disSort
 	self.CountY[v.Y]++
 //	var L int
 //	self.RawPatterns,L = AppendSortVal(RawPatterns,v)
 //	self.DisSort = append(append(disSort[:L],dis),disSort[L:]...)
-	return &self,sortlist
+	return &self,sortlist,L
+
 }
 func (self *Cl) GetPG() float64{
 	return self.Sum/self.DisCount
 }
 func (self *Cl) DeleteVal(I int) (*tmpdata.Val,error) {
-//	fmt.Println("del")
-//	ld := len(self.DisSort)
-//	lr := len(self.RawPatterns)
-//	for t,di:= range self.DisSort {
-//		li := len(di)+1
-//		fmt.Println(t,li,ld,lr," ")
-//		fmt.Println(di)
-//		if ld  != li {
-//			fmt.Println(di)
-//			panic(10)
-//		}
-//	}
 
 	v:=self.RawPatterns[I]
 	self.DisSort = append(self.DisSort[:I],self.DisSort[I+1 :]...)
@@ -140,9 +131,8 @@ func (self *Cl) DeleteVal(I int) (*tmpdata.Val,error) {
 //	panic(0)
 //	self.UpdateCore()
 }
-func (self *Cl) OutputCheck(L []int) ([]int) {
-	Le := len(self.RawPatterns)-1
-	if Le < 3 {
+func (self *Cl) OutputCheck(L []int,Le int) ([]int) {
+	if len(self.RawPatterns)< 3 {
 		return nil
 	}
 	Lc := L[self.Core]+1

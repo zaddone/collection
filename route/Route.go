@@ -113,7 +113,7 @@ func (self *Route) ReadPath() {
 		last:=self.appendPathInfo(pi)
 //		self.SetPathInfoCache(pi)
 		if last!=nil {
-		last.start <- pi
+			last.start <- pi
 		}
 		return nil
 	})
@@ -210,13 +210,11 @@ func (self *Route) QueryCache(name string) {
 	}
 	sed:=last.Pi.tr.GetCache().Sedslist
 	kcon:=0
-	con:=0
 	sedLen := 10
 	seds := make([]*tmpcache.Cl,sedLen)
 	for _,c := range sed.Clu {
 		L := len(c.RawPatterns)
-		con += L
-		if L > 10 {
+		if c.GetPG() < 1 && L > 10{
 
 //			a:=float64(c.CountY[0])
 //			b:=float64(c.CountY[1])
@@ -231,7 +229,7 @@ func (self *Route) QueryCache(name string) {
 //			}
 		}
 	}
-	fmt.Printf("%d %d %d %d\r\n",sed.ValCount,con,kcon,len(sed.Clu))
+	fmt.Printf("%d %d %d\r\n",sed.ValCount,kcon,len(sed.Clu))
 	var s1 string
 	for {
 		fmt.Println("Wait input")

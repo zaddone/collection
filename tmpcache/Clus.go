@@ -6,11 +6,11 @@ import (
 //	"sync"
 	"fmt"
 	"math"
+	"time"
 )
 const (
 	LongLen int = 1000
-	LongIsBack int = 1
-	MaxLong  int = 10000
+	MaxVal  int = 10000
 )
 type Clus struct {
 	Clu []*Cl
@@ -48,6 +48,7 @@ func (self *Clus) Append(v *tmpdata.Val)  {
 }
 func (self *Clus) FindSame(v *tmpdata.Val) *tmpdata.Val {
 	clus,tmps := self.getTmpVals(nil)
+//	fmt.Println(len(clus))
 	if len(clus) < 2 {
 		return nil
 	}
@@ -61,11 +62,23 @@ func (self *Clus) FindSame(v *tmpdata.Val) *tmpdata.Val {
 	sortlist:=make( []int,Long)
 	tmpClus :=make( []*Cl,Long)
 	isOut := 0
+	H:
 	for j,d := range dis[:Long] {
 		oic := clus[d.i]
-		cl,L:=oic.TmpAppendVal(v)
+		if oic.lock {
+			for {
+				if oic.RawPatterns == nil {
+					continue H
+				}
+				if !oic.lock{
+					break
+				}
+				time.Sleep(100*time.Millisecond)
+			}
+		}
+		cl,L,num:=oic.TmpAppendVal(v)
 		cl.SetOic(oic)
-		out := cl.OutputCheck(L)
+		out := cl.OutputCheck(L,num)
 		if out == nil {
 			if isOut >2 {
 				Long = j
@@ -84,6 +97,7 @@ func (self *Clus) FindSame(v *tmpdata.Val) *tmpdata.Val {
 	}
 	var cls *Cl
 	if 0 == sortlist[0] {
+		return tmpDisSort[0].a
 		cls =tmpClus[0].oic
 //		cls =tmpClus[0].oic
 //		cls.UpdateCore()
@@ -126,9 +140,9 @@ func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
 	isOut := 0
 	for j,d := range dis[:Long] {
 		oic := clus[d.i]
-		cl,L:=oic.TmpAppendVal(v)
+		cl,L,num:=oic.TmpAppendVal(v)
 		cl.SetOic(oic)
-		out := cl.OutputCheck(L)
+		out := cl.OutputCheck(L,num)
 		if out == nil {
 			if isOut >2 {
 				Long = j
@@ -150,25 +164,37 @@ func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
 		cls =tmpClus[0]
 		cls.UpdateCore()
 
-		a:=float64(cls.oic.CountY[0])
-		b:=float64(cls.oic.CountY[1])
-		sum := a+b
-//		if sum >10 {
-			df := a-b
-			if math.Abs(df)/sum > 0.75 {
-				y := 0
-				if df <0 {
-					y = 1
-				}
-				if tmpDisSort[0].a.Y == y {
-					self.ca.same++
-//					fmt.Println(cls.CountY,cls.oic.CountY)
-					if y != v.Y {
-						self.ca.er ++
-					}
-				}
-
+		if cls.oic.GetPG() < 1 {
+		sameVal := tmpDisSort[0].a
+		if sameVal.Y == 0 && sameVal.C == v.C {
+			self.ca.same++
+			if sameVal.Y != v.Y {
+				self.ca.er ++
 			}
+		}
+		}
+
+	//	if cls.oic.GetPG() < 1 {
+	//		a:=float64(cls.oic.CountY[0])
+	//		b:=float64(cls.oic.CountY[1])
+	//		sum := a+b
+//	//		if sum >10 {
+	//		df := a-b
+	//		if math.Abs(df)/sum > 0.65 {
+	//			y := 0
+	//			if df <0 {
+	//				y = 1
+	//			}
+	//			if tmpDisSort[0].a.Y == y {
+	//				self.ca.same++
+//	//				fmt.Println(cls.CountY,cls.oic.CountY)
+	//				if y != v.Y {
+	//					self.ca.er ++
+	//				}
+	//			}
+
+	//		}
+	//	}
 //		}
 		cls.oic.Copy(cls)
 	}else{
@@ -185,14 +211,30 @@ func (self *Clus) AppendVal(v *tmpdata.Val,isBack int)  {
 			fc.lock = true
 //			fmt.Println(lis,len(fc.RawPatterns),J)
 			Lf := len(fc.RawPatterns)
-			for i:= Lf-1;i>=0;i--{
-//			for _,i := range lis {
-				err := self.AppendEdit(fc.RawPatterns[i],fc)
-				if err == nil {
-					fc.DeleteVal(i)
-					fc.UpdateCore()
+			if float64(len(lis))/float64(Lf) > 0.6 {
+				for i:= Lf-1;i>=0;i--{
+//				for _,i := range lis {
+					err := self.AppendEdit(fc.RawPatterns[i],fc)
+					if err == nil {
+						_,err = fc.DeleteVal(i)
+						if err != nil {
+							panic(err)
+						}
+						fc.UpdateCore()
+					}
 				}
-	//			cls.Append(_v)
+			}else{
+				for _,i := range lis {
+					err := self.AppendEdit(fc.RawPatterns[i],fc)
+					if err == nil {
+						_,err = fc.DeleteVal(i)
+						if err != nil {
+							panic(err)
+						}
+						fc.UpdateCore()
+					}
+				}
+
 			}
 			fc.lock = false
 //			fc.UpdateCore()
@@ -236,9 +278,9 @@ func (self *Clus) AppendEdit(v *tmpdata.Val,clu *Cl) error {
 	isOut := 0
 	for j,d := range dis[:Long] {
 		oic := clus[d.i]
-		cl,L:=oic.TmpAppendVal(v)
+		cl,L,num:=oic.TmpAppendVal(v)
 		cl.SetOic(oic)
-		out := cl.OutputCheck(L)
+		out := cl.OutputCheck(L,num)
 		if out == nil {
 			if isOut >2 {
 				Long = j
@@ -274,9 +316,11 @@ func (self *Clus) getTmpVals(clu *Cl) (tmpc []*Cl,tmp []*tmpdata.Val) {
 //	for i := L -1; i>=0; i--{
 //		_c := self.Clu[i]
 //		le := len(_c.RawPatterns)
-		if !_c.lock {
+
+		if _c.lock {
 			continue
 		}
+
 		if _c.RawPatterns == nil {
 //			self.Clu = append(self.Clu[:i],self.Clu[i+1:]...)
 			continue
@@ -284,9 +328,11 @@ func (self *Clus) getTmpVals(clu *Cl) (tmpc []*Cl,tmp []*tmpdata.Val) {
 		if _c == clu {
 			continue
 		}
-		tmpc[j] = _c
-		tmp[j] = _c.RawPatterns[_c.Core]
-		j ++
+		if len(_c.RawPatterns) > _c.Core {
+			tmpc[j] = _c
+			tmp[j] = _c.RawPatterns[_c.Core]
+			j ++
+		}
 	}
 	return tmpc[:j],tmp[:j]
 }
@@ -295,6 +341,7 @@ func (self *Clus) getTmpVal() (tmpc []*Cl,tmp []*tmpdata.Val) {
 	L := len(self.Clu)
 	tmpc = make([]*Cl,L)
 	tmp = make([]*tmpdata.Val,L)
+//	hj := self.ValCount - MaxVal
 	j := 0
 	for i := L -1;i>=0;i--{
 		_c := self.Clu[i]
@@ -309,9 +356,13 @@ func (self *Clus) getTmpVal() (tmpc []*Cl,tmp []*tmpdata.Val) {
 				err := self.AppendEdit(_c.RawPatterns[j],_c)
 				if err == nil {
 					if len(_c.RawPatterns) >1 {
-						_c.DeleteVal(j)
+						_,err = _c.DeleteVal(j)
+						if err != nil {
+							panic(err)
+						}
 					}else{
 						_c.Clear()
+						break
 					}
 				}
 			}
@@ -319,11 +370,21 @@ func (self *Clus) getTmpVal() (tmpc []*Cl,tmp []*tmpdata.Val) {
 				self.Clu = append(self.Clu[:i],self.Clu[i+1:]...)
 				continue
 			}
+//			if hj > 0 {
+//				last := _c.RawPatterns[le-1]
+//				if last.GetH() < hj {
+//					self.Clu = append(self.Clu[:i],self.Clu[i+1:]...)
+//					continue
+//				}
+//			}
+			_c.UpdateCore()
 			_c.lock = false
 		}
-		tmpc[j] = _c
-		tmp[j] = _c.RawPatterns[_c.Core]
-		j ++
+		if len(_c.RawPatterns) > _c.Core {
+			tmpc[j] = _c
+			tmp[j] = _c.RawPatterns[_c.Core]
+			j ++
+		}
 	}
 	return tmpc[:j],tmp[:j]
 

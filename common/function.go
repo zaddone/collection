@@ -168,8 +168,14 @@ func MatrixMul(a, b [][]float64) (c [][]float64) {
 		c[i] = make([]float64,row)
 		for j:=0; j<row;j++{
 			for k:=0; k<len(b); k++ {
-				sum += a[i][k] * b[k][j]
 		//		fmt.Println(i,j,k,sum)
+				if len(a[i])> k && len(b[k]) > j {
+					sum += a[i][k] * b[k][j]
+				}else{
+					fmt.Println(len(a),len(a[0]))
+					fmt.Println(len(b),len(b[0]))
+					panic(0)
+				}
 			}
 		//	fmt.Println(i,j)
 			c[i][j] = sum
